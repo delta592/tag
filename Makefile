@@ -16,25 +16,54 @@ bindir 		= ${prefix}/bin
 man1dir		= ${prefix}/share/man/man1
 
 SRCS		= Tag/main.swift
-ARCH_PROGRAMS	= $(foreach arch,${ARCHS},bin/.build/${arch}/tag)
 
 PROGRAM		= bin/tag
 MANPAGE		= Tag/tag.1
 
 all: tag
 
+help:
+	@echo "Available targets:"
+	@echo "  make                  Build the default Universal 2 binary (same as all)"
+	@echo "  make all              Build the default Universal 2 binary"
+	@echo "  make tag              Build bin/tag"
+	@echo "  make native           Build a single-architecture binary for this Mac"
+	@echo "  make check-universal  Verify bin/tag contains arm64 and x86_64 slices"
+	@echo "  make test             Run the canonical local/CI test suite"
+	@echo "  make test-lint        Run SwiftLint through the test alias"
+	@echo "  make lint-swift       Run SwiftLint when installed"
+	@echo "  make test-cli         Run subprocess CLI integration tests"
+	@echo "  make test-universal   Verify the Universal 2 artifact"
+	@echo "  make test-install     Verify staged install output"
+	@echo "  make test-xcode       Build and verify Xcode Debug/Release outputs"
+	@echo "  make test-man         Lint the man page when mandoc is installed"
+	@echo "  make bin              Create the build output directory"
+	@echo "  make clean            Remove build artifacts"
+	@echo "  make distclean        Remove distribution/build artifacts"
+	@echo "  make install          Install tag and its man page"
+	@echo "  make installdirs      Create installation directories"
+	@echo "  make uninstall        Remove installed tag and man page"
+
 tag: ${PROGRAM}
 
-${PROGRAM}: bin ${ARCH_PROGRAMS}
+${PROGRAM}: bin ${SRCS} Makefile
 	@if [ "$(words ${ARCHS})" = "1" ]; then \
-		cp "${ARCH_PROGRAMS}" "${PROGRAM}"; \
+		for arch in ${ARCHS}; do \
+			${SWIFTC} ${SWIFTFLAGS} -target "$$arch-apple-macos${MACOSX_DEPLOYMENT_TARGET}" ${SRCS} -o "${PROGRAM}"; \
+		done; \
 	else \
-		lipo -create ${ARCH_PROGRAMS} -output "${PROGRAM}"; \
+		tmpdir=$$(mktemp -d "$${TMPDIR:-/tmp}/tag-build.XXXXXX"); \
+		outputs=""; \
+		for arch in ${ARCHS}; do \
+			mkdir -p "$$tmpdir/$$arch"; \
+			${SWIFTC} ${SWIFTFLAGS} -target "$$arch-apple-macos${MACOSX_DEPLOYMENT_TARGET}" ${SRCS} -o "$$tmpdir/$$arch/tag" || { rm -rf "$$tmpdir"; exit 1; }; \
+			outputs="$$outputs $$tmpdir/$$arch/tag"; \
+		done; \
+		lipo -create $$outputs -output "${PROGRAM}"; \
+		rc=$$?; \
+		rm -rf "$$tmpdir"; \
+		exit $$rc; \
 	fi
-
-bin/.build/%/tag: ${SRCS} Makefile
-	mkdir -p $(@D)
-	${SWIFTC} ${SWIFTFLAGS} -target $*-apple-macos${MACOSX_DEPLOYMENT_TARGET} ${SRCS} -o $@
 
 native:
 	${MAKE} ARCHS="${NATIVE_ARCH}" clean tag
@@ -102,4 +131,4 @@ uninstall:
 	rm -f ${DESTDIR}${bindir}/$(notdir ${PROGRAM})
 	rm -f ${DESTDIR}${man1dir}/$(notdir ${MANPAGE})
 
-.PHONY: all tag native check-universal test test-lint lint-swift test-cli test-universal test-install test-xcode test-man clean distclean install installdirs uninstall
+.PHONY: all help tag native check-universal test test-lint lint-swift test-cli test-universal test-install test-xcode test-man clean distclean install installdirs uninstall
