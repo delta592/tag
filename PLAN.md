@@ -63,13 +63,13 @@ This project is a small macOS command-line tool for reading, writing, matching, 
 
 ## Phase 2A: Produce Universal 2 Binaries
 
-- [ ] Decide whether Universal 2 should be required for every local `make` build or only for release/distribution builds.
-- [ ] Update the Makefile so the documented distribution build produces one Universal 2 binary with both `arm64` and `x86_64` slices.
-- [ ] Keep a simple way to build a single-architecture binary for local development if needed.
-- [ ] Verify the Xcode build also produces a Universal 2 binary, not separate Intel and Apple Silicon outputs.
-- [ ] Add a CI check that inspects the built executable with `lipo -info` or `file` and fails unless both `arm64` and `x86_64` are present.
-- [ ] Document the Universal 2 build command and verification command in the README.
-- [ ] Ensure `make install DESTDIR=...` installs the Universal 2 binary for packaging workflows.
+- [x] Decide whether Universal 2 should be required for every local `make` build or only for release/distribution builds.
+- [x] Update the Makefile so the documented distribution build produces one Universal 2 binary with both `arm64` and `x86_64` slices.
+- [x] Keep a simple way to build a single-architecture binary for local development if needed.
+- [x] Verify the Xcode build also produces a Universal 2 binary, not separate Intel and Apple Silicon outputs.
+- [x] Add a CI check that inspects the built executable with `lipo -info` or `file` and fails unless both `arm64` and `x86_64` are present.
+- [x] Document the Universal 2 build command and verification command in the README.
+- [x] Ensure `make install DESTDIR=...` installs the Universal 2 binary for packaging workflows.
 
 ## Phase 3: API and Implementation Updates
 

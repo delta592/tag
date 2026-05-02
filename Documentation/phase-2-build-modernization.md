@@ -24,6 +24,7 @@ xcodebuild -project Tag.xcodeproj -target Tag -configuration Release build
 - [x] Enabled ARC explicitly outside Xcode.
 - [x] Passed `-mmacosx-version-min=15.0` explicitly.
 - [x] Resolved the macOS SDK through `xcrun --sdk macosx --show-sdk-path`.
+- [x] Phase 2A updated the default Makefile build to produce a Universal 2 binary. See `Documentation/phase-2a-universal-2.md`.
 
 Commands:
 

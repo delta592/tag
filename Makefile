@@ -7,7 +7,11 @@ INSTALL		= /usr/bin/install
 MACOSX_DEPLOYMENT_TARGET ?= 15.0
 SDKROOT		?= $(shell xcrun --sdk macosx --show-sdk-path)
 CC		= xcrun clang
-CFLAGS		+= -fobjc-arc -mmacosx-version-min=${MACOSX_DEPLOYMENT_TARGET} -isysroot ${SDKROOT}
+ARCHS		?= arm64 x86_64
+ARCH_FLAGS	= $(foreach arch,${ARCHS},-arch ${arch})
+CFLAGS		+= ${ARCH_FLAGS} -fobjc-arc -mmacosx-version-min=${MACOSX_DEPLOYMENT_TARGET} -isysroot ${SDKROOT}
+UNIVERSAL_ARCHS	= arm64 x86_64
+NATIVE_ARCH	= $(shell uname -m)
 
 bindir 		= ${prefix}/bin
 man1dir		= ${prefix}/share/man/man1
@@ -26,6 +30,13 @@ tag: ${PROGRAM}
 ${PROGRAM}: bin ${SRCS} Makefile
 	${CC} ${CFLAGS} ${SRCS} ${LIBS} -o ${PROGRAM}
 
+native:
+	${MAKE} ARCHS="${NATIVE_ARCH}" clean tag
+
+check-universal: tag
+	lipo ${PROGRAM} -verify_arch ${UNIVERSAL_ARCHS}
+	lipo -info ${PROGRAM}
+
 bin:
 	mkdir -p bin
 
@@ -34,7 +45,7 @@ clean:
 	
 distclean: clean
 
-install: tag installdirs
+install: tag check-universal installdirs
 	${INSTALL} -m ${DSTMODE} ${PROGRAM} ${DESTDIR}${bindir}
 	${INSTALL} -m ${MANMODE} ${MANPAGE} ${DESTDIR}${man1dir}
 
@@ -46,4 +57,4 @@ uninstall:
 	rm -f ${DESTDIR}${bindir}/$(notdir ${PROGRAM})
 	rm -f ${DESTDIR}${man1dir}/$(notdir ${MANPAGE})
 
-.PHONY: all tag clean distclean install installdirs uninstall
+.PHONY: all tag native check-universal clean distclean install installdirs uninstall

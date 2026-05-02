@@ -206,12 +206,22 @@ To build without installing:
 
 	make
 
-This uses `xcrun clang`, enables Objective-C ARC, targets macOS 15.0, and builds **tag** into ./bin/tag.
+This uses `xcrun clang`, enables Objective-C ARC, targets macOS 15.0, and builds a Universal 2 **tag** binary into ./bin/tag.
+
+To verify the binary contains both Apple Silicon and Intel slices:
+
+	make check-universal
+
+To build only for the current machine architecture during local development:
+
+	make native
 
 You can also verify the Xcode target directly:
 
 	xcodebuild -project Tag.xcodeproj -target Tag -configuration Debug build
+	lipo build/Debug/tag -verify_arch arm64 x86_64
 	xcodebuild -project Tag.xcodeproj -target Tag -configuration Release build
+	lipo build/Release/tag -verify_arch arm64 x86_64
 
 Testing
 ---
@@ -225,7 +235,7 @@ To test a different binary, set `TAG_BIN`:
 
 	TAG_BIN=/path/to/tag Tests/integration.sh
 
-See `Documentation/phase-1-baseline.md` for the captured behavior baseline and `Documentation/phase-2-build-modernization.md` for current build modernization details.
+See `Documentation/phase-1-baseline.md` for the captured behavior baseline, `Documentation/phase-2-build-modernization.md` for current build modernization details, and `Documentation/phase-2a-universal-2.md` for Universal 2 build notes.
 
 To build and install onto your system:
 
