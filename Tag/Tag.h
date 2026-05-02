@@ -70,7 +70,8 @@ typedef NS_ENUM(int, SearchScope) {
 
 @property (copy, nonatomic) NSDictionary* tagColors;
 
-- (void)parseCommandLineArgv:(char * const *)argv argc:(int)argc;
-- (void)performOperation;
+- (int)runWithArgv:(char * const *)argv argc:(int)argc;
+- (int)parseCommandLineArgv:(char * const *)argv argc:(int)argc;
+- (int)performOperation;
 
 @end

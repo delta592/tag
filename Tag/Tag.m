@@ -56,9 +56,14 @@ NSString* const version = @"0.10.0";
 
 // This constant doesn't seem to be defined in MDItem.h, so we define it here
 NSString* const kMDItemUserTags = @"kMDItemUserTags";
+NSString* const TagErrorDomain = @"tag";
+NSTimeInterval const MetadataQueryTimeout = 30.0;
 
 
 @interface Tag ()
+@property (assign, nonatomic) int exitStatus;
+@property (assign, nonatomic) BOOL shouldStop;
+@property (assign, nonatomic) BOOL metadataQueryFinished;
 @end
 
 
@@ -115,7 +120,17 @@ typedef NS_ENUM(int, CommandCode) {
 };
 
 
-- (void)parseCommandLineArgv:(char * const *)argv argc:(int)argc
+- (int)runWithArgv:(char * const *)argv argc:(int)argc
+{
+    int parseStatus = [self parseCommandLineArgv:argv argc:argc];
+    if (parseStatus != 0 || self.operationMode == OperationModeNone)
+        return parseStatus;
+    
+    return [self performOperation];
+}
+
+
+- (int)parseCommandLineArgv:(char * const *)argv argc:(int)argc
 {
     static struct option options[] = {
         // Operations
@@ -170,6 +185,10 @@ typedef NS_ENUM(int, CommandCode) {
     self.URLs = nil;
     
     self.tagColors = nil;
+    
+    self.exitStatus = 0;
+    self.shouldStop = NO;
+    self.metadataQueryFinished = NO;
 
     int name_flag = 0;
     int tags_flag = 0;
@@ -197,7 +216,7 @@ typedef NS_ENUM(int, CommandCode) {
                 if (self.operationMode)
                 {
                     FPrintf(stderr, @"%@: Operation mode cannot be respecified\n", [self programName]);
-                    exit(1);
+                    return 1;
                 }
                 self.operationMode = option_char;
                 
@@ -205,7 +224,11 @@ typedef NS_ENUM(int, CommandCode) {
                     optarg = "*";
                 
                 if (optarg != nil)
-                   [self parseTagsArgument:[NSString stringWithUTF8String:optarg]];
+                {
+                    NSString* tagsArgument = [NSString stringWithUTF8String:optarg];
+                    if (![self parseTagsArgument:tagsArgument])
+                        return 1;
+                }
                 
                 break;
             }
@@ -304,17 +327,25 @@ typedef NS_ENUM(int, CommandCode) {
         self.tagColors = [self getTagColors];
 
     // Process any remaining arguments as pathnames, converting into URLs
-    [self parseFilenameArguments:&argv[optind] argc:argc - optind];
+    if (![self parseFilenameArguments:&argv[optind] argc:argc - optind])
+        return 3;
+    
+    return 0;
 }
 
 
-- (void)parseFilenameArguments:(char * const *)argv argc:(int)argc
+- (BOOL)parseFilenameArguments:(char * const *)argv argc:(int)argc
 {
     NSMutableArray* URLs = [NSMutableArray new];
     for (int arg = 0; arg < argc; ++arg)
     {
         // Get the path, ignoring empty paths
         NSString* path = [NSString stringWithUTF8String:argv[arg]];
+        if (path == nil)
+        {
+            FPrintf(stderr, @"%@: Invalid UTF-8 path argument\n", [self programName]);
+            return NO;
+        }
         if (![path length])
             continue;
         
@@ -323,16 +354,23 @@ typedef NS_ENUM(int, CommandCode) {
         if (!URL)
         {
             FPrintf(stderr, @"%@: Can't form a URL from path %@\n", [self programName], path);
-            exit(3);
+            return NO;
         }
         [URLs addObject:URL];
     }
     self.URLs = URLs;
+    return YES;
 }
 
 
-- (void)parseTagsArgument:(NSString*)arg
+- (BOOL)parseTagsArgument:(NSString*)arg
 {
+    if (arg == nil)
+    {
+        FPrintf(stderr, @"%@: Invalid UTF-8 tag argument\n", [self programName]);
+        return NO;
+    }
+    
     // The tags arg is a comma-separated list of tags
     NSArray* components = [arg componentsSeparatedByString:@","];
     
@@ -346,6 +384,7 @@ typedef NS_ENUM(int, CommandCode) {
     }
     
     self.tags = uniqueTags;
+    return YES;
 }
 
 
@@ -479,7 +518,7 @@ typedef NS_ENUM(int, CommandCode) {
 }
 
 
-- (void)performOperation
+- (int)performOperation
 {
     switch (self.operationMode)
     {
@@ -515,13 +554,22 @@ typedef NS_ENUM(int, CommandCode) {
         case OperationModeUnknown:
             break;
     }
+    
+    return self.exitStatus;
 }
 
 
 - (void)reportFatalError:(NSError*)error onURL:(NSURL*)URL
 {
-    FPrintf(stderr, @"%@: %@\n", [self programName], error.localizedDescription);
-    exit(2);
+    NSString* path = URL ? URL.relativePath : nil;
+    NSString* message = error.localizedDescription ?: @"Unknown error";
+    if ([path length])
+        FPrintf(stderr, @"%@: %@: %@\n", [self programName], path, message);
+    else
+        FPrintf(stderr, @"%@: %@\n", [self programName], message);
+    
+    self.exitStatus = 2;
+    self.shouldStop = YES;
 }
 
 
@@ -650,11 +698,17 @@ typedef NS_ENUM(int, CommandCode) {
     NSDirectoryEnumerator* enumerator = [fileManager enumeratorAtURL:baseURL
                                           includingPropertiesForKeys:@[NSURLTagNamesKey]
                                                              options:enumerationOptions
-                                                        errorHandler:nil];
+                                                        errorHandler:^BOOL(NSURL *URL, NSError *error) {
+        [self reportFatalError:error onURL:URL];
+        return NO;
+    }];
     
     NSString* baseURLString = [baseURL absoluteString];
     for (NSObject* obj in enumerator)
     {
+        if (self.shouldStop)
+            break;
+        
         @autoreleasepool {
             NSURL* fullURL = (NSURL*)obj;
             
@@ -692,6 +746,9 @@ typedef NS_ENUM(int, CommandCode) {
         // Process URLs provided on the command line
         for (NSURL* URL in self.URLs)
         {
+            if (self.shouldStop)
+                break;
+            
             @autoreleasepool {
                 // Invoke the block
                 block(URL);
@@ -722,6 +779,9 @@ typedef NS_ENUM(int, CommandCode) {
     // --all, --enter, and --recursive apply
     NSArray* tagArray = [self tagArrayFromTagSet:self.tags];
     [self enumerateURLsWithBlock:^(NSURL *URL) {
+        if (self.shouldStop)
+            return;
+        
         NSError* error;
         if (![URL setResourceValue:tagArray forKey:NSURLTagNamesKey error:&error])
             [self reportFatalError:error onURL:URL];
@@ -743,12 +803,18 @@ typedef NS_ENUM(int, CommandCode) {
     // Enumerate the provided URLs, adding tags to each
     // --all, --enter, and --recursive apply
     [self enumerateURLsWithBlock:^(NSURL *URL) {
+        if (self.shouldStop)
+            return;
+        
         NSError* error;
         
         // Get the existing tags
         NSArray* existingTags;
         if (![URL getResourceValue:&existingTags forKey:NSURLTagNamesKey error:&error])
+        {
             [self reportFatalError:error onURL:URL];
+            return;
+        }
         
         // Form the union of the existing tags + new tags.
         NSMutableSet* tagSet = [self tagSetFromTagArray:existingTags];
@@ -777,12 +843,18 @@ typedef NS_ENUM(int, CommandCode) {
     // Enumerate the provided URLs, removing tags from each
     // --all, --enter, and --recursive apply
     [self enumerateURLsWithBlock:^(NSURL *URL) {
+        if (self.shouldStop)
+            return;
+        
         NSError* error;
         
         // Get existing tags from the URL
         NSArray* existingTags;
         if (![URL getResourceValue:&existingTags forKey:NSURLTagNamesKey error:&error])
+        {
             [self reportFatalError:error onURL:URL];
+            return;
+        }
         
         // Form the revised array of tags
         NSArray* revisedTags;
@@ -814,12 +886,18 @@ typedef NS_ENUM(int, CommandCode) {
     // Enumerate the provided URLs or current directory, listing all paths that match the specified tags
     // --all, --enter, and --recursive apply
     [self enumerateURLsWithBlock:^(NSURL *URL) {
+        if (self.shouldStop)
+            return;
+        
         NSError* error;
         
         // Get the tags on the URL
         NSArray* tagArray;
         if (![URL getResourceValue:&tagArray forKey:NSURLTagNamesKey error:&error])
+        {
             [self reportFatalError:error onURL:URL];
+            return;
+        }
         NSUInteger tagCount = [tagArray count];
         
         // If the set of existing tags contains all of the required
@@ -838,11 +916,17 @@ typedef NS_ENUM(int, CommandCode) {
     // Enumerate the provided URLs or current directory, listing the tags for each path
     // --all, --enter, and --recursive apply
     [self enumerateURLsWithBlock:^(NSURL* URL) {
+        if (self.shouldStop)
+            return;
+        
         // Get the tags
         NSError* error;
         NSArray* tagArray;
         if (![URL getResourceValue:&tagArray forKey:NSURLTagNamesKey error:&error])
+        {
             [self reportFatalError:error onURL:URL];
+            return;
+        }
         
         // Emit
         [self emitURL:URL tags:tagArray];
@@ -866,6 +950,8 @@ typedef NS_ENUM(int, CommandCode) {
 {
     // Start a metadata search for files containing all of the given tags
     NSMetadataQuery* metadataQuery = [self performMetadataSearchForTags:self.tags usageMode:usageMode];
+    if (metadataQuery == nil || self.shouldStop)
+        return;
     
     // Emit the results of the query, either for tags or for usage
     if (usageMode)
@@ -993,12 +1079,40 @@ typedef NS_ENUM(int, CommandCode) {
     [metadataQuery setOperationQueue:[NSOperationQueue mainQueue]];
     
     // Begin the asynchronous query
-    [metadataQuery startQuery];
+    self.metadataQueryFinished = NO;
+    if (![metadataQuery startQuery])
+    {
+        NSError* error = [NSError errorWithDomain:TagErrorDomain
+                                             code:2
+                                         userInfo:@{NSLocalizedDescriptionKey: @"Metadata query could not be started"}];
+        [self reportFatalError:error onURL:nil];
+        [[NSNotificationCenter defaultCenter] removeObserver:self
+                                                        name:NSMetadataQueryDidFinishGatheringNotification
+                                                      object:metadataQuery];
+        return nil;
+    }
 
-    // Enter the run loop, exiting only when the query is done
+    // Enter the run loop, exiting when the query is done or clearly unavailable.
     NSRunLoop *runLoop = [NSRunLoop currentRunLoop];
-    while (!metadataQuery.stopped && [runLoop runMode:NSDefaultRunLoopMode beforeDate:[NSDate distantFuture]])
-        ;
+    NSDate* deadline = [NSDate dateWithTimeIntervalSinceNow:MetadataQueryTimeout];
+    while (!self.metadataQueryFinished && [deadline timeIntervalSinceNow] > 0)
+    {
+        NSDate* nextRunDate = [NSDate dateWithTimeIntervalSinceNow:0.1];
+        if ([nextRunDate compare:deadline] == NSOrderedDescending)
+            nextRunDate = deadline;
+        
+        if (![runLoop runMode:NSDefaultRunLoopMode beforeDate:nextRunDate])
+            break;
+    }
+    
+    if (!self.metadataQueryFinished)
+    {
+        [metadataQuery stopQuery];
+        NSError* error = [NSError errorWithDomain:TagErrorDomain
+                                             code:2
+                                         userInfo:@{NSLocalizedDescriptionKey: @"Metadata query timed out; Spotlight may be disabled, unavailable, or still indexing"}];
+        [self reportFatalError:error onURL:nil];
+    }
     
     // Remove the notification observers
     [[NSNotificationCenter defaultCenter] removeObserver:self
@@ -1015,6 +1129,7 @@ typedef NS_ENUM(int, CommandCode) {
     // This will cause our runloop loop to terminate.
     NSMetadataQuery* metadataQuery = sender.object;
     [metadataQuery stopQuery];
+    self.metadataQueryFinished = YES;
 }
 
 

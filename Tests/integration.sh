@@ -43,6 +43,23 @@ assert_not_contains() {
     esac
 }
 
+LAST_OUTPUT=
+assert_status() {
+    expected=$1
+    label=$2
+    shift 2
+
+    set +e
+    LAST_OUTPUT=$("$@" 2>&1)
+    actual=$?
+    set -e
+
+    if [ "$actual" -ne "$expected" ]; then
+        printf 'FAIL: %s\nexpected status: <%s>\nactual status:   <%s>\noutput: <%s>\n' "$label" "$expected" "$actual" "$LAST_OUTPUT" >&2
+        exit 1
+    fi
+}
+
 if [ ! -x "$TAG_BIN" ]; then
     fail "tag binary not found at $TAG_BIN; run 'make' first or set TAG_BIN"
 fi
@@ -98,5 +115,12 @@ assert_not_contains "HiddenTag" "$recursive_output" "recursive output skips hidd
 
 all_output=$("$TAG_BIN" --list --recursive --all --no-name "$FIXTURE_DIR")
 assert_contains "HiddenTag" "$all_output" "all recursive output includes hidden files"
+
+assert_status 1 "duplicate operations are rejected" "$TAG_BIN" --list --set Alpha "$ONE_TAG_FILE"
+assert_contains "Operation mode cannot be respecified" "$LAST_OUTPUT" "duplicate operation error is actionable"
+
+MISSING_FILE="$TMP_DIR/missing.txt"
+assert_status 2 "missing paths return operation failure" "$TAG_BIN" --list "$MISSING_FILE"
+assert_contains "missing.txt" "$LAST_OUTPUT" "missing path error includes the path"
 
 printf 'integration tests passed\n'

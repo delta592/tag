@@ -235,7 +235,7 @@ To test a different binary, set `TAG_BIN`:
 
 	TAG_BIN=/path/to/tag Tests/integration.sh
 
-See `Documentation/phase-1-baseline.md` for the captured behavior baseline, `Documentation/phase-2-build-modernization.md` for current build modernization details, and `Documentation/phase-2a-universal-2.md` for Universal 2 build notes.
+See `Documentation/phase-1-baseline.md` for the captured behavior baseline, `Documentation/phase-2-build-modernization.md` for current build modernization details, `Documentation/phase-2a-universal-2.md` for Universal 2 build notes, and `Documentation/phase-3-api-implementation.md` for current API and error-handling notes.
 
 To build and install onto your system:
 

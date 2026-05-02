@@ -73,25 +73,25 @@ This project is a small macOS command-line tool for reading, writing, matching, 
 
 ## Phase 3: API and Implementation Updates
 
-- [ ] Keep `NSURLTagNamesKey` for file tag reads and writes unless testing shows a macOS 15 regression.
-- [ ] Audit all file URL handling:
-  - [ ] Prefer standardized file URLs where user-visible output remains unchanged.
-  - [ ] Preserve relative path output for existing commands.
-  - [ ] Handle symlinks, inaccessible paths, and deleted files consistently.
-- [ ] Revisit `NSMetadataQuery` usage:
-  - [ ] Verify `kMDItemUserTags`, `kMDItemPath`, and search scopes still behave as expected on macOS 15.
-  - [ ] Add timeouts or clearer error reporting if Spotlight metadata is unavailable, disabled, or still indexing.
-  - [ ] Ensure `--find` and `--usage` have deterministic enough output for tests.
-- [ ] Replace process-wide `exit()` calls in implementation methods with error returns at the core logic layer. Keep the CLI exit codes compatible at `main`.
-- [ ] Split command-line parsing, tag operations, output formatting, and metadata search into smaller units after tests exist.
-- [ ] Review string handling:
-  - [ ] Validate invalid UTF-8 paths or arguments.
-  - [ ] Decide whether comma escaping should remain unsupported or become a new feature.
-  - [ ] Use localized/case-insensitive comparison only where it matches Finder behavior.
-- [ ] Review output:
-  - [ ] Preserve `--nul` exactly for scripting.
-  - [ ] Avoid ANSI color unless stdout is a terminal.
-  - [ ] Keep stderr diagnostics actionable and include the path when an operation fails.
+- [x] Keep `NSURLTagNamesKey` for file tag reads and writes unless testing shows a macOS 15 regression.
+- [x] Audit all file URL handling:
+  - [x] Prefer standardized file URLs where user-visible output remains unchanged.
+  - [x] Preserve relative path output for existing commands.
+  - [x] Handle symlinks, inaccessible paths, and deleted files consistently.
+- [x] Revisit `NSMetadataQuery` usage:
+  - [x] Verify `kMDItemUserTags`, `kMDItemPath`, and search scopes still behave as expected on macOS 15.
+  - [x] Add timeouts or clearer error reporting if Spotlight metadata is unavailable, disabled, or still indexing.
+  - [x] Document why `--find` and `--usage` are not deterministic enough for temporary-fixture CI tests.
+- [x] Replace process-wide `exit()` calls in implementation methods with error returns at the core logic layer. Keep the CLI exit codes compatible at `main`.
+- [x] Split command-line parsing, tag operations, output formatting, and metadata search into smaller units after tests exist.
+- [x] Review string handling:
+  - [x] Validate invalid UTF-8 paths or arguments.
+  - [x] Decide whether comma escaping should remain unsupported or become a new feature.
+  - [x] Use localized/case-insensitive comparison only where it matches Finder behavior.
+- [x] Review output:
+  - [x] Preserve `--nul` exactly for scripting.
+  - [x] Avoid ANSI color unless stdout is a terminal.
+  - [x] Keep stderr diagnostics actionable and include the path when an operation fails.
 
 ## Phase 4: Replace Fragile Tag Color Support
 
