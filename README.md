@@ -208,6 +208,20 @@ To build without installing:
 
 This will build **tag** into ./bin/tag
 
+Testing
+---
+
+The Phase 1 modernization baseline includes a lightweight integration test harness. It builds temporary files and directories, applies tags through the compiled command, and verifies the main local file operations:
+
+	make
+	Tests/integration.sh
+
+To test a different binary, set `TAG_BIN`:
+
+	TAG_BIN=/path/to/tag Tests/integration.sh
+
+See `Documentation/phase-1-baseline.md` for the captured baseline behavior and known Xcode build status before modernization.
+
 To build and install onto your system:
 
 	make && sudo make install
