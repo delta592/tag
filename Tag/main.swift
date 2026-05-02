@@ -759,7 +759,9 @@ private final class TagCLI {
     }
 
     private func reportFatalError(_ error: Error, on url: URL?) {
-        reportFatalError((error as NSError).localizedDescription, on: url)
+        let nsError = error as NSError
+        let diagnostic = "\(nsError.localizedDescription) (\(nsError.domain) error \(nsError.code))"
+        reportFatalError(diagnostic, on: url)
     }
 
     private func reportFatalError(_ message: String, on url: URL?) {

@@ -171,6 +171,8 @@ assert_contains "Operation mode cannot be respecified" "$LAST_OUTPUT" "duplicate
 MISSING_FILE="$TMP_DIR/missing.txt"
 assert_status 2 "missing paths return operation failure" "$TAG_BIN" --list "$MISSING_FILE"
 assert_contains "missing.txt" "$LAST_OUTPUT" "missing path error includes the path"
+assert_contains " error " "$LAST_OUTPUT" "operation failure includes underlying error code"
+assert_contains ")" "$LAST_OUTPUT" "operation failure includes underlying error domain"
 
 "$TAG_BIN" --set Red "$ONE_TAG_FILE"
 ESC=$(printf '\033')
