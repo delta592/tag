@@ -20,11 +20,19 @@ Use this checklist when preparing a `tag` release.
 - [ ] If debugging a specific layer, use the narrower Make targets:
 
   ```sh
+  make test-lint
   make test-cli
   make test-universal
   make test-install
   make test-xcode
   make test-man
+  ```
+
+- [ ] Confirm SwiftLint is installed when preparing a release locally:
+
+  ```sh
+  swiftlint version
+  make lint-swift
   ```
 
 - [ ] Build a clean Universal 2 binary separately if you need the artifact after tests:

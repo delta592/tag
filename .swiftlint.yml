@@ -1,0 +1,33 @@
+included:
+  - Tag
+
+excluded:
+  - bin
+  - build
+  - .build
+
+disabled_rules:
+  # The current Swift CLI is intentionally a single-file rewrite to preserve
+  # behavior first. Re-enable these as the implementation is split into
+  # smaller types/files.
+  - cyclomatic_complexity
+  - file_length
+  - function_body_length
+  - type_body_length
+
+line_length:
+  warning: 160
+  error: 220
+  ignores_comments: true
+  ignores_urls: true
+
+identifier_name:
+  min_length:
+    warning: 2
+  excluded:
+    - id
+
+trailing_comma:
+  mandatory_comma: false
+
+reporter: xcode

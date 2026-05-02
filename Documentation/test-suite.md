@@ -13,11 +13,19 @@ CI runs the same `make test` target so local and automated validation do not dri
 ## Makefile Targets
 
 - `make test`: Runs the full default suite.
+- `make test-lint`: Runs SwiftLint when `swiftlint` is installed.
+- `make lint-swift`: Runs only SwiftLint, using `.swiftlint.yml`.
 - `make test-cli`: Builds `bin/tag` and runs subprocess CLI integration tests.
 - `make test-universal`: Verifies the Makefile-built binary contains `arm64` and `x86_64` slices.
 - `make test-install`: Stages `make install DESTDIR=...` and verifies the installed binary and man page.
 - `make test-xcode`: Builds Xcode Debug and Release outputs and verifies Universal 2 slices.
 - `make test-man`: Runs `mandoc -T lint Tag/tag.1` when `mandoc` is available.
+
+CI installs SwiftLint before running `make test`, so linting is enforced in GitHub Actions. Local runs skip SwiftLint with a message if it is not installed. Install it with:
+
+```sh
+brew install swiftlint
+```
 
 ## CLI Integration Coverage
 

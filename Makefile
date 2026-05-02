@@ -44,7 +44,16 @@ check-universal: tag
 	lipo -info ${PROGRAM}
 	file ${PROGRAM}
 
-test: test-cli test-universal test-install test-xcode test-man
+test: test-lint test-cli test-universal test-install test-xcode test-man
+
+test-lint: lint-swift
+
+lint-swift:
+	@if command -v swiftlint >/dev/null 2>&1; then \
+		swiftlint lint --config .swiftlint.yml; \
+	else \
+		echo "swiftlint not found; skipping SwiftLint (install with 'brew install swiftlint')"; \
+	fi
 
 test-cli: tag
 	Tests/integration.sh
@@ -93,4 +102,4 @@ uninstall:
 	rm -f ${DESTDIR}${bindir}/$(notdir ${PROGRAM})
 	rm -f ${DESTDIR}${man1dir}/$(notdir ${MANPAGE})
 
-.PHONY: all tag native check-universal test test-cli test-universal test-install test-xcode test-man clean distclean install installdirs uninstall
+.PHONY: all tag native check-universal test test-lint lint-swift test-cli test-universal test-install test-xcode test-man clean distclean install installdirs uninstall
