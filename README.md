@@ -1,6 +1,6 @@
 tag
 ===
-**tag** is a command line tool to manipulate tags on Mac OS X files (10.9 Mavericks and above), and to query for files with those tags. **tag** can use the file system's built-in metadata search functionality to rapidly find all files that have been tagged with a given set of tags.
+**tag** is a command line tool to manipulate tags on macOS 15 and later, and to query for files with those tags. **tag** can use the file system's built-in metadata search functionality to rapidly find all files that have been tagged with a given set of tags.
 
 Usage
 ---
@@ -237,7 +237,7 @@ To test a different binary, set `TAG_BIN`:
 
 	TAG_BIN=/path/to/tag Tests/integration.sh
 
-See `Documentation/phase-1-baseline.md` for the captured behavior baseline, `Documentation/phase-2-build-modernization.md` for current build modernization details, `Documentation/phase-2a-universal-2.md` for Universal 2 build notes, `Documentation/phase-3-api-implementation.md` for current API and error-handling notes, and `Documentation/phase-4-finder-colors.md` for Finder color behavior.
+See `Documentation/phase-1-baseline.md` for the captured behavior baseline, `Documentation/phase-2-build-modernization.md` for current build modernization details, `Documentation/phase-2a-universal-2.md` for Universal 2 build notes, `Documentation/phase-3-api-implementation.md` for current API and error-handling notes, `Documentation/phase-4-finder-colors.md` for Finder color behavior, `Documentation/phase-5-swift-rewrite.md` for Swift rewrite notes, and `Documentation/release-checklist.md` for release steps.
 
 To build and install onto your system:
 

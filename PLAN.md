@@ -135,17 +135,17 @@ This project is a small macOS command-line tool for reading, writing, matching, 
 
 ## Phase 6: Documentation and Distribution
 
-- [ ] Update README references from "Mac OS X 10.9 Mavericks and above" to "macOS 15 and later".
-- [ ] Regenerate the man page from a single source of truth or document the manual update process.
-- [ ] Fix documentation drift:
-  - [ ] The README uses `--nul`; the man page currently documents `--null`.
-  - [ ] The man page contains a typo in the `--network` option line.
-- [ ] Add a release checklist:
-  - [ ] Version bump.
-  - [ ] README update.
-  - [ ] Man page update.
-  - [ ] Build and test commands.
-  - [ ] Homebrew/MacPorts packaging notes.
+- [x] Update README references from the old macOS 10.9 support statement to "macOS 15 and later".
+- [x] Regenerate the man page from a single source of truth or document the manual update process.
+- [x] Fix documentation drift:
+  - [x] The README uses `--nul`; the man page previously documented the wrong long option.
+  - [x] The man page contains a typo in the `--network` option line.
+- [x] Add a release checklist:
+  - [x] Version bump.
+  - [x] README update.
+  - [x] Man page update.
+  - [x] Build and test commands.
+  - [x] Homebrew/MacPorts packaging notes.
 
 ## Suggested Milestones
 
@@ -154,14 +154,14 @@ This project is a small macOS command-line tool for reading, writing, matching, 
 - [ ] Universal 2 distribution branch: produce and verify a single binary containing both Apple Silicon and Intel slices.
 - [ ] Internal cleanup branch: separate parsing, operations, output, and metadata search with no intended behavior change.
 - [ ] macOS 15 behavior branch: address Spotlight query behavior, error handling, and tag color policy.
-- [ ] Documentation branch: update README, man page, install instructions, and release checklist.
+- [x] Documentation branch: update README, man page, install instructions, and release checklist.
 
 ## Acceptance Criteria
 
-- [ ] `tag` builds from a clean checkout on macOS 15+ using the documented command.
-- [ ] The documented distribution build produces a Universal 2 `tag` binary with `arm64` and `x86_64` slices.
-- [ ] Automated tests cover the main CLI modes and pass in CI.
-- [ ] `make install DESTDIR=...` or the chosen replacement works for packaging.
-- [ ] Existing documented command syntax continues to work unless a breaking change is explicitly approved.
-- [ ] Private Finder preference parsing is either removed, isolated behind a documented best-effort boundary, or replaced with a supported/configurable approach.
-- [ ] README and man page agree on supported macOS versions, options, and installation paths.
+- [x] `tag` builds from a clean checkout on macOS 15+ using the documented command.
+- [x] The documented distribution build produces a Universal 2 `tag` binary with `arm64` and `x86_64` slices.
+- [x] Automated tests cover the main CLI modes and pass in CI.
+- [x] `make install DESTDIR=...` or the chosen replacement works for packaging.
+- [x] Existing documented command syntax continues to work unless a breaking change is explicitly approved.
+- [x] Private Finder preference parsing is either removed, isolated behind a documented best-effort boundary, or replaced with a supported/configurable approach.
+- [x] README and man page agree on supported macOS versions, options, and installation paths.

@@ -1,39 +1,50 @@
-.TH "TAG" "1" "Jul 2019" "Tag" "tag"
+.TH "TAG" "1" "May 1, 2026" "Tag" "tag"
 .
 .SH "NAME"
 \fBtag\fR \- A tool for manipulating and querying file tags.
 .
 .SH "SYNOPSIS"
-\fBtag\fR [options] [command] [<tags> <path>] \.\.\.
-.
-.SH "COMMANDS"
-.TP
-.BR \-a ", " \-\-add\ \fItags\ \fIpath\fR
-Add tags to file
-.TP
-.BR \-r ", " \-\-remove\ \fItags\ \fIpath\fR
-Remove tags from file
-.TP
-.BR \-s ", " \-\-set\ \fItags\ \fIpath\fR
-Set tags on file
-.TP
-.BR \-m ", " \-\-match\ \fItags\ \fIpath\fR
-Display files with matching tags
-.TP
-.BR \-f ", " \-\-find\ \fItags\ \fIpath\fR
-Find all files with tags (-A, -e, -R ignored)
-.TP
-.BR \-u ", " \-\-usage\ \fItags\ \fIpath\fR
-Display tag usage
-.TP
-.BR \-l ", " \-\-list\ \fItags\ \fIpath\fR
-List the tags on file
+\fBtag\fR [options] [command] [<tags> <path>] ...
 .
 .SH "DESCRIPTION"
 .
-<tags> is a comma-separated list of tag names; use * to match/find any tag (but not no tags).
+\fBtag\fR is a command line tool to manipulate tags on macOS 15 and later,
+and to query for files with those tags.
+It can use the filesystem metadata database used by Spotlight to find files
+tagged with a given set of tags.
+.
+.P
+Wherever \fItags\fR is expected, provide a comma-separated list of tag names.
+Use \fB*\fR to match or find any tag.
+An empty tag expression matches files with no tags.
+.
+.SH "COMMANDS"
+.TP
+.BR \-a ", " \-\-add " " \fItags\ path...\fR
+Add tags to files.
+.TP
+.BR \-r ", " \-\-remove " " \fItags\ path...\fR
+Remove tags from files. Use \fB*\fR as the tag expression to remove all tags.
+.TP
+.BR \-s ", " \-\-set " " \fItags\ path...\fR
+Replace all tags on files.
+.TP
+.BR \-m ", " \-\-match " " \fItags\ path...\fR
+Display provided files with matching tags.
+If no paths are provided, enumerate the current directory.
+.TP
+.BR \-f ", " \-\-find " " \fItags\ [path...]\fR
+Find files with matching tags using Spotlight metadata.
+Directory enumeration options such as \fB-A\fR, \fB-e\fR, and \fB-R\fR are
+ignored.
+.TP
+.BR \-u ", " \-\-usage " " \fI[tags]\ [path...]\fR
+Display tag usage counts. If tags are omitted, usage defaults to \fB*\fR.
+.TP
+.BR \-l ", " \-\-list " " \fI[path...]\fR
+List tags on files. This is the default operation.
+.
 .SH "OPTIONS"
-. Additional options:
 .TP
 .BR \-v ", " \-\-version
 Display version
@@ -69,12 +80,14 @@ Display tags each on own line (list, find, match)
 Display tags comma-separated after filename (default)
 .TP
 .BR \-c ", " \-\-color
-Display tag names in color
+Display tag names in color when stdout is a terminal.
+Standard Finder color names are supported directly; user-customized Finder
+color mapping is best-effort.
 .TP
 .BR \-p ", " \-\-slash
 Terminate each directory name with a slash
 .TP
-.BR \-0 ", " \-\-null
+.BR \-0 ", " \-\-nul
 Terminate lines with NUL (\0) for use with xargs -0
 .TP
 .BR "    \-\-home"
@@ -83,8 +96,39 @@ Find tagged files in user home directory
 .BR "    \-\-local"
 Find tagged files in home + local filesystems
 .TP
-.BR "    \-\-network"qq
+.BR "    \-\-network"
 Find tagged files in home + local + network filesystems
+.
+.SH "BUILDING"
+.
+Build a Universal 2 binary with:
+.
+.P
+.RS
+.nf
+make
+.fi
+.RE
+.
+.P
+Verify the binary contains both Apple Silicon and Intel slices with:
+.
+.P
+.RS
+.nf
+make check-universal
+.fi
+.RE
+.
+.P
+Install the binary and this man page with:
+.
+.P
+.RS
+.nf
+make && sudo make install
+.fi
+.RE
 .
 .SH BUGS
 Report on https://github.com/jdberry/tag/issues
