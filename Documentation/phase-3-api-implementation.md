@@ -50,5 +50,5 @@ The Phase 1 probe showed that a freshly-created temporary fixture can produce no
 
 ## Structural Notes
 
-- [x] Separated the process lifecycle into `runWithArgv:argc:`, command-line parsing, and operation execution return paths.
-- [x] Left larger file/class extraction for the later language and structure phase, where Objective-C cleanup or a Swift rewrite can be evaluated with test coverage in place.
+- [x] Separated the process lifecycle into command-line parsing and operation execution return paths.
+- [x] Phase 5 later replaced the Objective-C implementation with Swift while preserving these return-code and error-handling behaviors.

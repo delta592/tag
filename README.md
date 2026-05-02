@@ -208,7 +208,7 @@ To build without installing:
 
 	make
 
-This uses `xcrun clang`, enables Objective-C ARC, targets macOS 15.0, and builds a Universal 2 **tag** binary into ./bin/tag.
+This uses `xcrun swiftc`, targets macOS 15.0, and builds a Universal 2 **tag** binary into ./bin/tag.
 
 To verify the binary contains both Apple Silicon and Intel slices:
 

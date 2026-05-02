@@ -1,6 +1,6 @@
 # Modernization Plan
 
-This project is a small macOS command-line tool for reading, writing, matching, and searching Finder tags. The current codebase is Objective-C, Foundation/CoreServices based, and still carries build assumptions from the macOS 10.9 era. The modernization target is macOS 15 and later.
+This project is a small macOS command-line tool for reading, writing, matching, and searching Finder tags. It began as an Objective-C Foundation/CoreServices tool with build assumptions from the macOS 10.9 era and now targets macOS 15 and later with Swift internals.
 
 ## Goals
 
@@ -51,9 +51,9 @@ This project is a small macOS command-line tool for reading, writing, matching, 
   - [x] Remove the prefix header unless a current build setting still requires it.
   - [x] Make build settings explicit at the target level where it improves reproducibility.
 - [x] Update the Makefile or replace it with a clearer primary build path:
-  - [x] Ensure ARC is enabled consistently when building outside Xcode.
+  - [x] Ensure compiler and deployment settings are explicit when building outside Xcode.
   - [x] Pass the macOS 15 deployment target explicitly.
-  - [x] Use `xcrun clang` or `xcodebuild` consistently instead of relying on whichever `cc` appears first.
+  - [x] Use `xcrun` or `xcodebuild` consistently instead of relying on whichever compiler appears first.
   - [x] Keep `DESTDIR`, `prefix`, man page installation, and uninstall support for package managers.
 - [x] Consider adding a Swift Package Manager manifest only if it improves CLI development and packaging without disrupting Homebrew/MacPorts workflows.
 - [x] Add CI:
@@ -105,17 +105,33 @@ This project is a small macOS command-line tool for reading, writing, matching, 
 - [x] Consider adding a user-configurable color map only as a fallback or override, not as a replacement for Finder colors.
 - [x] Keep ANSI color output gated to terminal output so scripted output remains stable.
 
-## Phase 5: Modernize Language and Structure
+## Phase 5: Rewrite CLI Internals in Swift
 
-- [ ] Prefer an incremental Objective-C cleanup first:
-  - [ ] Add nullability annotations to headers.
-  - [ ] Use lightweight generics for collections.
-  - [ ] Make immutable properties explicit.
-  - [ ] Remove unused comments and stale future notes after moving useful ideas into issues.
-- [ ] Evaluate a Swift rewrite only after the test harness is in place:
-  - [ ] Swift could simplify argument parsing, value types, and tests.
-  - [ ] Objective-C may remain the lower-risk choice for a small mature CLI with simple Foundation usage.
-- [ ] If moving to Swift, keep the binary name, CLI syntax, exit codes, man page, and package-manager install paths stable.
+- [x] Treat Swift as the preferred modernization path now that the project targets macOS 15+, has integration tests, and has clearer build/behavior baselines.
+- [x] Preserve the public CLI contract throughout the rewrite:
+  - [x] Keep the `tag` binary name.
+  - [x] Keep existing command syntax and short/long options.
+  - [x] Keep existing exit-code meanings.
+  - [x] Keep relative path output, `--nul`, and color-output behavior stable.
+  - [x] Keep the man page and package-manager install paths stable.
+- [x] Use the Objective-C implementation as the behavior reference until the Swift implementation reaches parity.
+- [x] Keep the rewrite internal first; do not combine it with feature redesigns or breaking command-line changes.
+- [x] Organize the Swift implementation around small focused types:
+  - [x] `TagCLI`
+  - [x] `TagName`
+  - [x] `FinderTagColorProvider`
+  - [x] `MetadataQueryObserver`
+  - [x] URL and output helpers
+- [x] Continue using supported Foundation APIs where possible:
+  - [x] `URLResourceKey.tagNamesKey` for reading and writing tags.
+  - [x] `NSMetadataQuery` for Spotlight-backed `--find` and `--usage`.
+  - [x] `FileManager` and `URL` for file traversal.
+  - [x] `ProcessInfo` for process context.
+- [x] Be cautious with third-party argument parsing:
+  - [x] Preserve legacy details such as optional `--usage` tags, default `--list`, and `-d`/`--descend`.
+  - [x] Prefer a small custom parser initially if `swift-argument-parser` cannot preserve compatibility exactly.
+- [x] Keep the Objective-C files until the Swift binary passes the existing integration suite and any added parity tests.
+- [x] Remove the Objective-C implementation only after Swift parity is verified in Makefile builds, Xcode builds, Universal 2 checks, and CI.
 
 ## Phase 6: Documentation and Distribution
 

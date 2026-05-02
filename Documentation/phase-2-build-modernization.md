@@ -6,8 +6,8 @@ This document records the build infrastructure changes made for Phase 2 of `PLAN
 
 - [x] Set the project and target deployment target to macOS 15.0.
 - [x] Updated project metadata from the old Xcode 3.2 compatibility era.
-- [x] Removed the prefix header from the Xcode build because each Objective-C source imports what it needs directly.
-- [x] Kept ARC enabled for Xcode builds.
+- [x] Removed the old Objective-C prefix header from the Xcode build.
+- [x] Kept Xcode build settings explicit enough for reproducible command-line builds.
 - [x] Verified Debug and Release builds with `xcodebuild`.
 
 Commands:
@@ -20,8 +20,8 @@ xcodebuild -project Tag.xcodeproj -target Tag -configuration Release build
 ## Makefile
 
 - [x] Kept the existing `make`, `make install`, `DESTDIR`, `prefix`, and uninstall workflow for package managers.
-- [x] Switched the default compiler invocation to `xcrun clang`.
-- [x] Enabled ARC explicitly outside Xcode.
+- [x] Switched the default compiler invocation to the explicit `xcrun` toolchain.
+- [x] Phase 5 now uses `xcrun swiftc` for the Swift implementation.
 - [x] Passed `-mmacosx-version-min=15.0` explicitly.
 - [x] Resolved the macOS SDK through `xcrun --sdk macosx --show-sdk-path`.
 - [x] Phase 2A updated the default Makefile build to produce a Universal 2 binary. See `Documentation/phase-2a-universal-2.md`.
@@ -45,4 +45,4 @@ make install DESTDIR=/tmp/tag-package-root
 
 - [x] Deferred adding a Swift Package Manager manifest.
 
-The project is still Objective-C, has no third-party dependencies, and already has package-manager-friendly Makefile install targets. Adding SwiftPM now would introduce a second project model without reducing build complexity. Revisit this if the codebase moves to Swift or if package distribution needs change.
+The project has no third-party dependencies and already has package-manager-friendly Makefile install targets. Adding SwiftPM now would introduce a second project model without reducing build complexity. Revisit this if package distribution needs change.

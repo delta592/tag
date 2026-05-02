@@ -6,19 +6,17 @@ MANMODE		= 0644
 INSTALL		= /usr/bin/install
 MACOSX_DEPLOYMENT_TARGET ?= 15.0
 SDKROOT		?= $(shell xcrun --sdk macosx --show-sdk-path)
-CC		= xcrun clang
+SWIFTC		= xcrun swiftc
 ARCHS		?= arm64 x86_64
-ARCH_FLAGS	= $(foreach arch,${ARCHS},-arch ${arch})
-CFLAGS		+= ${ARCH_FLAGS} -fobjc-arc -mmacosx-version-min=${MACOSX_DEPLOYMENT_TARGET} -isysroot ${SDKROOT}
+SWIFTFLAGS	+= -sdk ${SDKROOT}
 UNIVERSAL_ARCHS	= arm64 x86_64
 NATIVE_ARCH	= $(shell uname -m)
 
 bindir 		= ${prefix}/bin
 man1dir		= ${prefix}/share/man/man1
 
-SRCS		= Tag/main.m Tag/Tag.m Tag/TagName.m
-LIBS		= -framework Foundation \
-			  -framework CoreServices
+SRCS		= Tag/main.swift
+ARCH_PROGRAMS	= $(foreach arch,${ARCHS},bin/.build/${arch}/tag)
 
 PROGRAM		= bin/tag
 MANPAGE		= Tag/tag.1
@@ -27,8 +25,16 @@ all: tag
 
 tag: ${PROGRAM}
 
-${PROGRAM}: bin ${SRCS} Makefile
-	${CC} ${CFLAGS} ${SRCS} ${LIBS} -o ${PROGRAM}
+${PROGRAM}: bin ${ARCH_PROGRAMS}
+	@if [ "$(words ${ARCHS})" = "1" ]; then \
+		cp "${ARCH_PROGRAMS}" "${PROGRAM}"; \
+	else \
+		lipo -create ${ARCH_PROGRAMS} -output "${PROGRAM}"; \
+	fi
+
+bin/.build/%/tag: ${SRCS} Makefile
+	mkdir -p $(@D)
+	${SWIFTC} ${SWIFTFLAGS} -target $*-apple-macos${MACOSX_DEPLOYMENT_TARGET} ${SRCS} -o $@
 
 native:
 	${MAKE} ARCHS="${NATIVE_ARCH}" clean tag
@@ -45,6 +51,7 @@ clean:
 	
 distclean: clean
 
+install: ARCHS=${UNIVERSAL_ARCHS}
 install: tag check-universal installdirs
 	${INSTALL} -m ${DSTMODE} ${PROGRAM} ${DESTDIR}${bindir}
 	${INSTALL} -m ${MANMODE} ${MANPAGE} ${DESTDIR}${man1dir}

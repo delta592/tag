@@ -7,7 +7,7 @@ This document captures the modernization baseline before changing behavior or up
 - [x] `make clean && make` succeeds with the current command-line tools.
 - [x] The Makefile produces `bin/tag`.
 - [x] `xcodebuild -project Tag.xcodeproj -target Tag -configuration Debug build` was attempted with the current Xcode.
-- [x] The Xcode build currently fails because the project still targets macOS 10.9 and the current SDK no longer provides ARC support for that deployment target.
+- [x] At the Phase 1 baseline, the Xcode build failed because the project still targeted macOS 10.9 and the current SDK no longer provided ARC support for that deployment target.
 
 The Xcode failure is expected modernization input for Phase 2, not a Phase 1 fix. The relevant failure is:
 
