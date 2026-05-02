@@ -42,6 +42,35 @@ native:
 check-universal: tag
 	lipo ${PROGRAM} -verify_arch ${UNIVERSAL_ARCHS}
 	lipo -info ${PROGRAM}
+	file ${PROGRAM}
+
+test: test-cli test-universal test-install test-xcode test-man
+
+test-cli: tag
+	Tests/integration.sh
+
+test-universal: check-universal
+
+test-install: tag
+	dest=$$(mktemp -d "$${TMPDIR:-/tmp}/tag-install.XXXXXX"); \
+	${MAKE} install DESTDIR="$$dest"; \
+	test -x "$$dest${bindir}/tag"; \
+	test -f "$$dest${man1dir}/tag.1"; \
+	lipo "$$dest${bindir}/tag" -verify_arch ${UNIVERSAL_ARCHS}; \
+	rm -rf "$$dest"
+
+test-xcode:
+	xcodebuild -project Tag.xcodeproj -target Tag -configuration Debug build
+	lipo build/Debug/tag -verify_arch ${UNIVERSAL_ARCHS}
+	xcodebuild -project Tag.xcodeproj -target Tag -configuration Release build
+	lipo build/Release/tag -verify_arch ${UNIVERSAL_ARCHS}
+
+test-man:
+	@if command -v mandoc >/dev/null 2>&1; then \
+		mandoc -T lint ${MANPAGE}; \
+	else \
+		echo "mandoc not found; skipping man page lint"; \
+	fi
 
 bin:
 	mkdir -p bin
@@ -64,4 +93,4 @@ uninstall:
 	rm -f ${DESTDIR}${bindir}/$(notdir ${PROGRAM})
 	rm -f ${DESTDIR}${man1dir}/$(notdir ${MANPAGE})
 
-.PHONY: all tag native check-universal clean distclean install installdirs uninstall
+.PHONY: all tag native check-universal test test-cli test-universal test-install test-xcode test-man clean distclean install installdirs uninstall

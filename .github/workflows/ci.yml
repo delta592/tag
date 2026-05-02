@@ -13,23 +13,5 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Build with Makefile
-        run: make clean && make
-
-      - name: Verify Makefile Universal 2 binary
-        run: make check-universal
-
-      - name: Run CLI integration tests
-        run: Tests/integration.sh
-
-      - name: Build Xcode Debug
-        run: xcodebuild -project Tag.xcodeproj -target Tag -configuration Debug build
-
-      - name: Verify Xcode Debug Universal 2 binary
-        run: lipo build/Debug/tag -verify_arch arm64 x86_64
-
-      - name: Build Xcode Release
-        run: xcodebuild -project Tag.xcodeproj -target Tag -configuration Release build
-
-      - name: Verify Xcode Release Universal 2 binary
-        run: lipo build/Release/tag -verify_arch arm64 x86_64
+      - name: Run canonical test suite
+        run: make test

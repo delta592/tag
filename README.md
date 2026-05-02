@@ -228,16 +228,21 @@ You can also verify the Xcode target directly:
 Testing
 ---
 
-The Phase 1 modernization baseline includes a lightweight integration test harness. It builds temporary files and directories, applies tags through the compiled command, and verifies the main local file operations:
+The Makefile owns the canonical test suite for local development and CI:
 
-	make
-	Tests/integration.sh
+	make test
+
+This builds the CLI, runs subprocess integration tests, verifies Universal 2 output, checks staged installation, builds Xcode Debug and Release outputs, and lints the man page when `mandoc` is available.
+
+For a faster CLI-only pass:
+
+	make test-cli
 
 To test a different binary, set `TAG_BIN`:
 
 	TAG_BIN=/path/to/tag Tests/integration.sh
 
-See `Documentation/phase-1-baseline.md` for the captured behavior baseline, `Documentation/phase-2-build-modernization.md` for current build modernization details, `Documentation/phase-2a-universal-2.md` for Universal 2 build notes, `Documentation/phase-3-api-implementation.md` for current API and error-handling notes, `Documentation/phase-4-finder-colors.md` for Finder color behavior, `Documentation/phase-5-swift-rewrite.md` for Swift rewrite notes, and `Documentation/release-checklist.md` for release steps.
+See `Documentation/phase-1-baseline.md` for the captured behavior baseline, `Documentation/phase-2-build-modernization.md` for current build modernization details, `Documentation/phase-2a-universal-2.md` for Universal 2 build notes, `Documentation/phase-3-api-implementation.md` for current API and error-handling notes, `Documentation/phase-4-finder-colors.md` for Finder color behavior, `Documentation/phase-5-swift-rewrite.md` for Swift rewrite notes, `Documentation/test-suite.md` for test coverage, and `Documentation/release-checklist.md` for release steps.
 
 To build and install onto your system:
 

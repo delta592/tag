@@ -11,34 +11,30 @@ Use this checklist when preparing a `tag` release.
 
 ## Build and Test
 
-- [ ] Build a clean Universal 2 binary:
+- [ ] Run the canonical local and CI suite:
+
+  ```sh
+  make clean && make test
+  ```
+
+- [ ] If debugging a specific layer, use the narrower Make targets:
+
+  ```sh
+  make test-cli
+  make test-universal
+  make test-install
+  make test-xcode
+  make test-man
+  ```
+
+- [ ] Build a clean Universal 2 binary separately if you need the artifact after tests:
 
   ```sh
   make clean && make
-  ```
-
-- [ ] Verify Universal 2 slices:
-
-  ```sh
   make check-universal
   ```
 
-- [ ] Run integration tests:
-
-  ```sh
-  Tests/integration.sh
-  ```
-
-- [ ] Verify Xcode Debug and Release outputs:
-
-  ```sh
-  xcodebuild -project Tag.xcodeproj -target Tag -configuration Debug build
-  lipo build/Debug/tag -verify_arch arm64 x86_64
-  xcodebuild -project Tag.xcodeproj -target Tag -configuration Release build
-  lipo build/Release/tag -verify_arch arm64 x86_64
-  ```
-
-- [ ] Verify staged install paths:
+- [ ] Verify staged install paths manually when changing packaging logic:
 
   ```sh
   dest=$(mktemp -d "${TMPDIR:-/tmp}/tag-install.XXXXXX")
