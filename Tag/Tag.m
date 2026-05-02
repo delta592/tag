@@ -57,6 +57,7 @@ NSString* const version = @"0.10.0";
 // This constant doesn't seem to be defined in MDItem.h, so we define it here
 NSString* const kMDItemUserTags = @"kMDItemUserTags";
 NSString* const TagErrorDomain = @"tag";
+NSString* const TagFinderPreferencesPathEnvironmentKey = @"TAG_FINDER_PREFERENCES_PATH";
 NSTimeInterval const MetadataQueryTimeout = 30.0;
 
 
@@ -64,6 +65,7 @@ NSTimeInterval const MetadataQueryTimeout = 30.0;
 @property (assign, nonatomic) int exitStatus;
 @property (assign, nonatomic) BOOL shouldStop;
 @property (assign, nonatomic) BOOL metadataQueryFinished;
+@property (assign, nonatomic) BOOL colorOutputEnabled;
 @end
 
 
@@ -189,6 +191,7 @@ typedef NS_ENUM(int, CommandCode) {
     self.exitStatus = 0;
     self.shouldStop = NO;
     self.metadataQueryFinished = NO;
+    self.colorOutputEnabled = NO;
 
     int name_flag = 0;
     int tags_flag = 0;
@@ -322,9 +325,12 @@ typedef NS_ENUM(int, CommandCode) {
     if (nulTerminate)
         _outputFlags |= OutputFlagsNulTerminate;
     
-    // Get colors if we're able to use them. If tagColors is nil, we won't try to emit color escapes
-    if (color && isatty(fileno(stdout)))
+    // Load Finder colors only when requested; emit ANSI escapes only for terminal output.
+    if (color)
+    {
+        self.colorOutputEnabled = isatty(fileno(stdout));
         self.tagColors = [self getTagColors];
+    }
 
     // Process any remaining arguments as pathnames, converting into URLs
     if (![self parseFilenameArguments:&argv[optind] argc:argc - optind])
@@ -446,18 +452,96 @@ typedef NS_ENUM(int, CommandCode) {
 #define COLORS_ORANGE    COLORS_ESCAPE @"48;5;208m"
 
 
-- (NSDictionary*)getTagColors
+- (NSString*)terminalColorSequenceForFinderColorCode:(NSInteger)colorCode
 {
-    // Get the tag colors
-    //
-    // Since this is using private finder data structures, it may not always continue to work.
-    // We make a best effort attempt and try to bail if we don't find what we expect to find there
+    switch (colorCode)
+    {
+        case 1:
+            return COLORS_GRAY;
+        case 2:
+            return COLORS_GREEN;
+        case 3:
+            return COLORS_PURPLE;
+        case 4:
+            return COLORS_BLUE;
+        case 5:
+            return COLORS_YELLOW;
+        case 6:
+            return COLORS_RED;
+        case 7:
+            return COLORS_ORANGE;
+    }
+    return nil;
+}
+
+
+- (NSDictionary*)defaultFinderTagColors
+{
+    return @{
+        [[TagName alloc] initWithTag:@"Gray"]: COLORS_GRAY,
+        [[TagName alloc] initWithTag:@"Green"]: COLORS_GREEN,
+        [[TagName alloc] initWithTag:@"Purple"]: COLORS_PURPLE,
+        [[TagName alloc] initWithTag:@"Blue"]: COLORS_BLUE,
+        [[TagName alloc] initWithTag:@"Yellow"]: COLORS_YELLOW,
+        [[TagName alloc] initWithTag:@"Red"]: COLORS_RED,
+        [[TagName alloc] initWithTag:@"Orange"]: COLORS_ORANGE,
+    };
+}
+
+
+- (NSURL*)finderTagPreferencesURL
+{
+    const char* overridePath = getenv([TagFinderPreferencesPathEnvironmentKey UTF8String]);
+    if (overridePath != NULL && overridePath[0] != '\0')
+        return [NSURL fileURLWithPath:[NSString stringWithUTF8String:overridePath]];
     
-    NSError* error;
+    NSArray* libraryURLs = [[NSFileManager defaultManager] URLsForDirectory:NSLibraryDirectory
+                                                                  inDomains:NSUserDomainMask];
+    NSURL* libraryURL = [libraryURLs firstObject];
+    if (libraryURL != nil)
+        return [libraryURL URLByAppendingPathComponent:@"SyncedPreferences/com.apple.finder.plist"];
+    
     NSString* homeDir = NSHomeDirectory();
-    NSString* finderPlistPath = [homeDir stringByAppendingString: @"/Library/SyncedPreferences/com.apple.finder.plist"];
-    NSURL* url = [NSURL fileURLWithPath:finderPlistPath];
+    if (![homeDir length])
+        return nil;
     
+    NSString* finderPlistPath = [homeDir stringByAppendingString:@"/Library/SyncedPreferences/com.apple.finder.plist"];
+    return [NSURL fileURLWithPath:finderPlistPath];
+}
+
+
+- (NSDictionary*)tagColorsFromFinderTagEntries:(NSArray*)tagsArray
+{
+    if (![tagsArray isKindOfClass:[NSArray class]])
+        return nil;
+    
+    NSMutableDictionary *colors = [NSMutableDictionary dictionaryWithCapacity:[tagsArray count]];
+    
+    for (NSDictionary* tagEntry in tagsArray)
+    {
+        if (![tagEntry isKindOfClass:[NSDictionary class]])
+            continue;
+        
+        NSString* tag = tagEntry[@"n"];
+        NSNumber* colorCode = tagEntry[@"l"];
+        if (![tag isKindOfClass:[NSString class]] || ![colorCode isKindOfClass:[NSNumber class]])
+            continue;
+        
+        NSString* colorSequence = [self terminalColorSequenceForFinderColorCode:[colorCode integerValue]];
+        if (colorSequence != nil)
+            [colors setObject:colorSequence forKey:[[TagName alloc] initWithTag:tag]];
+    }
+    
+    return [colors copy];
+}
+
+
+- (NSDictionary*)tagColorsFromFinderPreferencesAtURL:(NSURL*)url
+{
+    if (url == nil)
+        return nil;
+    
+    NSError* error = nil;
     NSData* data = [NSData dataWithContentsOfURL:url];
     if (!data)
         return nil;
@@ -467,52 +551,21 @@ typedef NS_ENUM(int, CommandCode) {
         return nil;
     
     NSArray* tagsArray = [properties valueForKeyPath:@"values.FinderTagDict.value.FinderTags"];
-    if (![tagsArray isKindOfClass:[NSArray class]])
+    return [self tagColorsFromFinderTagEntries:tagsArray];
+}
+
+
+- (NSDictionary*)getTagColors
+{
+    // Finder exposes tag names through public resource APIs, but its tag-name-to-color
+    // mapping is Finder preference state. Keep that integration isolated and best-effort.
+    NSMutableDictionary* colors = [[self defaultFinderTagColors] mutableCopy];
+    NSDictionary* finderColors = [self tagColorsFromFinderPreferencesAtURL:[self finderTagPreferencesURL]];
+    if ([finderColors count])
+        [colors addEntriesFromDictionary:finderColors];
+    
+    if (![colors count])
         return nil;
-    
-    // Form a map from tag name to color escape sequence for that tag
-    NSUInteger tagCount = [tagsArray count];
-    NSMutableDictionary *colors = [NSMutableDictionary dictionaryWithCapacity:tagCount];
-    
-    for (NSDictionary* tagEntry in tagsArray)
-    {
-        if (![tagEntry isKindOfClass:[NSDictionary class]])
-            return nil;
-        
-        NSString* tag = tagEntry[@"n"];
-        NSNumber* colorCode = tagEntry[@"l"];
-        if (tag == nil || colorCode == nil)
-            continue;
-        
-        NSString* colorSequence = nil;
-        switch ([colorCode intValue])
-        {
-            case 1:
-                colorSequence = COLORS_GRAY;
-                break;
-            case 2:
-                colorSequence = COLORS_GREEN;
-                break;
-            case 3:
-                colorSequence = COLORS_PURPLE;
-                break;
-            case 4:
-                colorSequence = COLORS_BLUE;
-                break;
-            case 5:
-                colorSequence = COLORS_YELLOW;
-                break;
-            case 6:
-                colorSequence = COLORS_RED;
-                break;
-            case 7:
-                colorSequence = COLORS_ORANGE;
-                break;
-        }
-        
-        if (colorSequence != nil)
-            [colors setObject:colorSequence forKey:[[TagName alloc] initWithTag:tag]];
-    }
 
     return [colors copy];
 }
@@ -586,7 +639,7 @@ typedef NS_ENUM(int, CommandCode) {
 - (NSString*)displayStringForTag:(NSString*)tag
 {
     NSString* result = nil;
-    NSString* colorSequence = (self.tagColors != nil) ? _tagColors[[[TagName alloc] initWithTag:tag]] : nil;
+    NSString* colorSequence = (self.colorOutputEnabled && self.tagColors != nil) ? _tagColors[[[TagName alloc] initWithTag:tag]] : nil;
     if (colorSequence != nil)
         result = [NSString stringWithFormat:@"%@%@%@", colorSequence, tag, COLORS_NONE];
     else

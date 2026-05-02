@@ -93,15 +93,17 @@ This project is a small macOS command-line tool for reading, writing, matching, 
   - [x] Avoid ANSI color unless stdout is a terminal.
   - [x] Keep stderr diagnostics actionable and include the path when an operation fails.
 
-## Phase 4: Replace Fragile Tag Color Support
+## Phase 4: Preserve and Harden Finder Tag Color Support
 
-- [ ] Treat the current Finder preference parsing as technical debt because it depends on private data shape.
-- [ ] Investigate whether macOS 15 exposes a supported API for Finder tag color metadata.
-- [ ] If no supported API exists, choose one of these paths:
-  - [ ] Keep `--color` as explicitly best-effort and add tests that tolerate missing colors.
-  - [ ] Replace it with a user-configurable color map.
-  - [ ] Deprecate `--color` and document why exact Finder colors are not supported.
-- [ ] Do not let color lookup failures affect tag operations or non-color output.
+- [x] Treat Finder tag color output as a core feature to preserve, not a feature to remove.
+- [x] Keep `--color` and continue matching the standard Finder tag colors when that information is available.
+- [x] Investigate whether macOS 15 exposes a supported API for Finder tag color metadata.
+- [x] If no supported API exists, isolate the current Finder preference parsing behind a small color-provider boundary because it depends on private data shape.
+- [x] Document the boundary clearly: file tag names use public APIs, while exact Finder color lookup is best-effort Finder preference integration.
+- [x] Add tests that tolerate missing, unreadable, or structurally changed Finder color preferences.
+- [x] Do not let color lookup failures affect tag operations or non-color output.
+- [x] Consider adding a user-configurable color map only as a fallback or override, not as a replacement for Finder colors.
+- [x] Keep ANSI color output gated to terminal output so scripted output remains stable.
 
 ## Phase 5: Modernize Language and Structure
 

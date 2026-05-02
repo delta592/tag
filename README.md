@@ -178,7 +178,9 @@ As with the *find* operation, you may control the paths searched by *usage*:
 	
 ### Colored Output
 
-If your terminal supports ANSI color sequences, you may pass the -c/--color option. With this option in effect, any tags with known colors will be displayed in approximately the right color. Note that support for this option is dependent upon parsing private Finder data, and so may not always be supported correctly.
+If your terminal supports ANSI color sequences, you may pass the -c/--color option. With this option in effect, any tags with known colors will be displayed in approximately the right color.
+
+Standard Finder color names such as Red, Orange, Yellow, Green, Blue, Purple, and Gray are supported directly. For user-customized tag colors, **tag** uses Finder preference data as a best-effort integration because macOS exposes public APIs for tag names, but not a stable public API for Finder's tag color mapping. Color lookup failures do not affect tag operations or non-color output.
 
 ### Get help
 
@@ -235,7 +237,7 @@ To test a different binary, set `TAG_BIN`:
 
 	TAG_BIN=/path/to/tag Tests/integration.sh
 
-See `Documentation/phase-1-baseline.md` for the captured behavior baseline, `Documentation/phase-2-build-modernization.md` for current build modernization details, `Documentation/phase-2a-universal-2.md` for Universal 2 build notes, and `Documentation/phase-3-api-implementation.md` for current API and error-handling notes.
+See `Documentation/phase-1-baseline.md` for the captured behavior baseline, `Documentation/phase-2-build-modernization.md` for current build modernization details, `Documentation/phase-2a-universal-2.md` for Universal 2 build notes, `Documentation/phase-3-api-implementation.md` for current API and error-handling notes, and `Documentation/phase-4-finder-colors.md` for Finder color behavior.
 
 To build and install onto your system:
 

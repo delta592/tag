@@ -123,4 +123,21 @@ MISSING_FILE="$TMP_DIR/missing.txt"
 assert_status 2 "missing paths return operation failure" "$TAG_BIN" --list "$MISSING_FILE"
 assert_contains "missing.txt" "$LAST_OUTPUT" "missing path error includes the path"
 
+"$TAG_BIN" --set Red "$ONE_TAG_FILE"
+ESC=$(printf '\033')
+missing_color_output=$(TAG_FINDER_PREFERENCES_PATH="$TMP_DIR/missing-finder.plist" "$TAG_BIN" --list --color --no-name "$ONE_TAG_FILE")
+assert_eq "Red" "$missing_color_output" "missing Finder color preferences do not affect tag output"
+assert_not_contains "$ESC[" "$missing_color_output" "color escapes are not emitted for non-terminal output"
+
+BAD_FINDER_PLIST="$TMP_DIR/bad-finder.plist"
+printf '<?xml version="1.0" encoding="UTF-8"?><plist version="1.0"><dict><key>values</key><dict/></dict></plist>' > "$BAD_FINDER_PLIST"
+bad_color_output=$(TAG_FINDER_PREFERENCES_PATH="$BAD_FINDER_PLIST" "$TAG_BIN" --list --color --no-name "$ONE_TAG_FILE")
+assert_eq "Red" "$bad_color_output" "changed Finder color preference shape falls back safely"
+
+UNREADABLE_FINDER_PLIST="$TMP_DIR/unreadable-finder.plist"
+printf '<?xml version="1.0" encoding="UTF-8"?><plist version="1.0"><dict/></plist>' > "$UNREADABLE_FINDER_PLIST"
+chmod 000 "$UNREADABLE_FINDER_PLIST"
+unreadable_color_output=$(TAG_FINDER_PREFERENCES_PATH="$UNREADABLE_FINDER_PLIST" "$TAG_BIN" --list --color --no-name "$ONE_TAG_FILE")
+assert_eq "Red" "$unreadable_color_output" "unreadable Finder color preferences fall back safely"
+
 printf 'integration tests passed\n'
