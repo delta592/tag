@@ -10,14 +10,14 @@ This project is a small macOS command-line tool for reading, writing, matching, 
 - Add enough automated coverage to make future refactors safe.
 - Preserve terminal-friendly behavior, including `--nul`, recursive enumeration, and scriptable output.
 
-## Current State
+## Initial State
 
-- The Xcode project uses an old compatibility level (`Xcode 3.2`) and a macOS 10.9 deployment target.
-- The Makefile builds with a direct compiler invocation and does not clearly mirror Xcode's ARC or deployment target settings.
+- At plan creation, the Xcode project used an old compatibility level (`Xcode 3.2`) and a macOS 10.9 deployment target.
+- At plan creation, the Makefile built with a direct compiler invocation and did not clearly mirror Xcode's ARC or deployment target settings.
 - The app uses public `NSURLTagNamesKey` APIs for reading and writing tags, which should remain the baseline implementation.
 - `--find` and `--usage` use `NSMetadataQuery` and Spotlight metadata attributes.
 - `--color` reads Finder's synced preferences directly, which is private, fragile, and called out in the README as best-effort behavior.
-- There is no visible automated test suite, CI workflow, formatting rule, or release checklist.
+- At plan creation, there was no visible automated test suite, CI workflow, formatting rule, or release checklist.
 
 ## Phase 1: Establish a Safe Baseline
 
@@ -45,21 +45,31 @@ This project is a small macOS command-line tool for reading, writing, matching, 
 
 ## Phase 2: Modernize Build Infrastructure
 
-- [ ] Update the Xcode project:
-  - [ ] Set `MACOSX_DEPLOYMENT_TARGET = 15.0`.
-  - [ ] Run Xcode's project modernization so `LastUpgradeCheck`, project compatibility, warnings, and recommended settings are current.
-  - [ ] Remove the prefix header unless a current build setting still requires it.
-  - [ ] Make build settings explicit at the target level where it improves reproducibility.
-- [ ] Update the Makefile or replace it with a clearer primary build path:
-  - [ ] Ensure ARC is enabled consistently when building outside Xcode.
-  - [ ] Pass the macOS 15 deployment target explicitly.
-  - [ ] Use `xcrun clang` or `xcodebuild` consistently instead of relying on whichever `cc` appears first.
-  - [ ] Keep `DESTDIR`, `prefix`, man page installation, and uninstall support for package managers.
-- [ ] Consider adding a Swift Package Manager manifest only if it improves CLI development and packaging without disrupting Homebrew/MacPorts workflows.
-- [ ] Add CI:
-  - [ ] Build in Debug and Release.
-  - [ ] Run CLI integration tests.
-  - [ ] Run on the newest available macOS runner.
+- [x] Update the Xcode project:
+  - [x] Set `MACOSX_DEPLOYMENT_TARGET = 15.0`.
+  - [x] Run Xcode's project modernization so `LastUpgradeCheck`, project compatibility, warnings, and recommended settings are current.
+  - [x] Remove the prefix header unless a current build setting still requires it.
+  - [x] Make build settings explicit at the target level where it improves reproducibility.
+- [x] Update the Makefile or replace it with a clearer primary build path:
+  - [x] Ensure ARC is enabled consistently when building outside Xcode.
+  - [x] Pass the macOS 15 deployment target explicitly.
+  - [x] Use `xcrun clang` or `xcodebuild` consistently instead of relying on whichever `cc` appears first.
+  - [x] Keep `DESTDIR`, `prefix`, man page installation, and uninstall support for package managers.
+- [x] Consider adding a Swift Package Manager manifest only if it improves CLI development and packaging without disrupting Homebrew/MacPorts workflows.
+- [x] Add CI:
+  - [x] Build in Debug and Release.
+  - [x] Run CLI integration tests.
+  - [x] Run on the newest available macOS runner.
+
+## Phase 2A: Produce Universal 2 Binaries
+
+- [ ] Decide whether Universal 2 should be required for every local `make` build or only for release/distribution builds.
+- [ ] Update the Makefile so the documented distribution build produces one Universal 2 binary with both `arm64` and `x86_64` slices.
+- [ ] Keep a simple way to build a single-architecture binary for local development if needed.
+- [ ] Verify the Xcode build also produces a Universal 2 binary, not separate Intel and Apple Silicon outputs.
+- [ ] Add a CI check that inspects the built executable with `lipo -info` or `file` and fails unless both `arm64` and `x86_64` are present.
+- [ ] Document the Universal 2 build command and verification command in the README.
+- [ ] Ensure `make install DESTDIR=...` installs the Universal 2 binary for packaging workflows.
 
 ## Phase 3: API and Implementation Updates
 
@@ -123,6 +133,7 @@ This project is a small macOS command-line tool for reading, writing, matching, 
 
 - [ ] Baseline branch: build current code, add CLI integration tests, and document current behavior.
 - [ ] Build modernization branch: update deployment target, project settings, Makefile, and CI.
+- [ ] Universal 2 distribution branch: produce and verify a single binary containing both Apple Silicon and Intel slices.
 - [ ] Internal cleanup branch: separate parsing, operations, output, and metadata search with no intended behavior change.
 - [ ] macOS 15 behavior branch: address Spotlight query behavior, error handling, and tag color policy.
 - [ ] Documentation branch: update README, man page, install instructions, and release checklist.
@@ -130,6 +141,7 @@ This project is a small macOS command-line tool for reading, writing, matching, 
 ## Acceptance Criteria
 
 - [ ] `tag` builds from a clean checkout on macOS 15+ using the documented command.
+- [ ] The documented distribution build produces a Universal 2 `tag` binary with `arm64` and `x86_64` slices.
 - [ ] Automated tests cover the main CLI modes and pass in CI.
 - [ ] `make install DESTDIR=...` or the chosen replacement works for packaging.
 - [ ] Existing documented command syntax continues to work unless a breaking change is explicitly approved.

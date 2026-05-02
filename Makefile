@@ -4,6 +4,10 @@ DSTMODE		= 0755
 MANMODE		= 0644
 
 INSTALL		= /usr/bin/install
+MACOSX_DEPLOYMENT_TARGET ?= 15.0
+SDKROOT		?= $(shell xcrun --sdk macosx --show-sdk-path)
+CC		= xcrun clang
+CFLAGS		+= -fobjc-arc -mmacosx-version-min=${MACOSX_DEPLOYMENT_TARGET} -isysroot ${SDKROOT}
 
 bindir 		= ${prefix}/bin
 man1dir		= ${prefix}/share/man/man1

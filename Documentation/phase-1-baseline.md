@@ -16,6 +16,8 @@ clang: error: SDK does not contain 'libarclite' ... try increasing the minimum d
 warning: The macOS deployment target 'MACOSX_DEPLOYMENT_TARGET' is set to 10.9
 ```
 
+Phase 2 resolved this by raising the project and target deployment settings to macOS 15.0. See `Documentation/phase-2-build-modernization.md`.
+
 ## Test Fixture Coverage
 
 The integration test harness in `Tests/integration.sh` creates a temporary fixture with:

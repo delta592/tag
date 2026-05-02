@@ -1,0 +1,26 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build-and-test:
+    name: Build and Test
+    runs-on: macos-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Build with Makefile
+        run: make clean && make
+
+      - name: Run CLI integration tests
+        run: Tests/integration.sh
+
+      - name: Build Xcode Debug
+        run: xcodebuild -project Tag.xcodeproj -target Tag -configuration Debug build
+
+      - name: Build Xcode Release
+        run: xcodebuild -project Tag.xcodeproj -target Tag -configuration Release build

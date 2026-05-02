@@ -200,13 +200,18 @@ You may install **tag** using the following package managers:
 
 Building and Installing
 ---
-You must have Xcode or the Command Line Tools installed to build/install.
+You must have macOS 15 or later and Xcode or the Command Line Tools installed to build/install.
 
 To build without installing:
 
 	make
 
-This will build **tag** into ./bin/tag
+This uses `xcrun clang`, enables Objective-C ARC, targets macOS 15.0, and builds **tag** into ./bin/tag.
+
+You can also verify the Xcode target directly:
+
+	xcodebuild -project Tag.xcodeproj -target Tag -configuration Debug build
+	xcodebuild -project Tag.xcodeproj -target Tag -configuration Release build
 
 Testing
 ---
@@ -220,7 +225,7 @@ To test a different binary, set `TAG_BIN`:
 
 	TAG_BIN=/path/to/tag Tests/integration.sh
 
-See `Documentation/phase-1-baseline.md` for the captured baseline behavior and known Xcode build status before modernization.
+See `Documentation/phase-1-baseline.md` for the captured behavior baseline and `Documentation/phase-2-build-modernization.md` for current build modernization details.
 
 To build and install onto your system:
 
