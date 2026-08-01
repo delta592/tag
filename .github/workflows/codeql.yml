@@ -9,14 +9,27 @@ on:
     - cron: "0 6 * * 1"
 
 jobs:
-  analyze-swift:
-    name: Analyze (swift)
-    runs-on: macos-latest
+  analyze:
+    name: Analyze (${{ matrix.language }})
+    runs-on: ${{ matrix.runner }}
     timeout-minutes: 30
     permissions:
       actions: read
       contents: read
       security-events: write
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - language: actions
+            runner: ubuntu-latest
+            category: /language:actions
+            build-mode: none
+          - language: swift
+            runner: macos-latest
+            category: /language:swift
+            build-mode: manual
 
     steps:
       - name: Check out repository
@@ -25,13 +38,14 @@ jobs:
       - name: Initialize CodeQL
         uses: github/codeql-action/init@f205ea1c3313d32999d8d6a48b4f6530d4437b38 # v4.37.4
         with:
-          languages: swift
-          build-mode: manual
+          languages: ${{ matrix.language }}
+          build-mode: ${{ matrix.build-mode }}
 
       - name: Build
+        if: matrix.language == 'swift'
         run: make native
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@f205ea1c3313d32999d8d6a48b4f6530d4437b38 # v4.37.4
         with:
-          category: /language:swift
+          category: ${{ matrix.category }}
