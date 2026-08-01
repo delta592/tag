@@ -69,7 +69,9 @@ native:
 	${MAKE} ARCHS="${NATIVE_ARCH}" clean tag
 
 check-universal: tag
-	lipo ${PROGRAM} -verify_arch ${UNIVERSAL_ARCHS}
+	@for arch in ${UNIVERSAL_ARCHS}; do \
+		lipo ${PROGRAM} -verify_arch $$arch; \
+	done
 	lipo -info ${PROGRAM}
 	file ${PROGRAM}
 
@@ -94,14 +96,20 @@ test-install: tag
 	${MAKE} install DESTDIR="$$dest"; \
 	test -x "$$dest${bindir}/tag"; \
 	test -f "$$dest${man1dir}/tag.1"; \
-	lipo "$$dest${bindir}/tag" -verify_arch ${UNIVERSAL_ARCHS}; \
+	for arch in ${UNIVERSAL_ARCHS}; do \
+		lipo "$$dest${bindir}/tag" -verify_arch $$arch; \
+	done; \
 	rm -rf "$$dest"
 
 test-xcode:
 	xcodebuild -project Tag.xcodeproj -target Tag -configuration Debug build
-	lipo build/Debug/tag -verify_arch ${UNIVERSAL_ARCHS}
+	@for arch in ${UNIVERSAL_ARCHS}; do \
+		lipo build/Debug/tag -verify_arch $$arch; \
+	done
 	xcodebuild -project Tag.xcodeproj -target Tag -configuration Release build
-	lipo build/Release/tag -verify_arch ${UNIVERSAL_ARCHS}
+	@for arch in ${UNIVERSAL_ARCHS}; do \
+		lipo build/Release/tag -verify_arch $$arch; \
+	done
 
 test-man:
 	@if command -v mandoc >/dev/null 2>&1; then \

@@ -48,12 +48,18 @@ make install DESTDIR=/tmp/tag-package-root
 
 The Xcode target is expected to produce one Universal 2 binary for Debug and Release when built with the repository project settings.
 
+`lipo -verify_arch` accepts one architecture per invocation, so verify each slice separately:
+
 ```sh
 xcodebuild -project Tag.xcodeproj -target Tag -configuration Debug build
-lipo build/Debug/tag -verify_arch arm64 x86_64
+for arch in arm64 x86_64; do
+  lipo build/Debug/tag -verify_arch "$arch"
+done
 
 xcodebuild -project Tag.xcodeproj -target Tag -configuration Release build
-lipo build/Release/tag -verify_arch arm64 x86_64
+for arch in arm64 x86_64; do
+  lipo build/Release/tag -verify_arch "$arch"
+done
 ```
 
 ## CI

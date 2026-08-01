@@ -49,7 +49,9 @@ Use this checklist when preparing a `tag` release.
   make install DESTDIR="$dest"
   test -x "$dest/usr/local/bin/tag"
   test -f "$dest/usr/local/share/man/man1/tag.1"
-  lipo "$dest/usr/local/bin/tag" -verify_arch arm64 x86_64
+  for arch in arm64 x86_64; do
+    lipo "$dest/usr/local/bin/tag" -verify_arch "$arch"
+  done
   rm -rf "$dest"
   ```
 

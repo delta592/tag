@@ -218,12 +218,12 @@ To build only for the current machine architecture during local development:
 
 	make native
 
-You can also verify the Xcode target directly:
+You can also verify the Xcode target directly (`lipo -verify_arch` accepts one architecture per invocation):
 
 	xcodebuild -project Tag.xcodeproj -target Tag -configuration Debug build
-	lipo build/Debug/tag -verify_arch arm64 x86_64
+	for arch in arm64 x86_64; do lipo build/Debug/tag -verify_arch "$arch"; done
 	xcodebuild -project Tag.xcodeproj -target Tag -configuration Release build
-	lipo build/Release/tag -verify_arch arm64 x86_64
+	for arch in arm64 x86_64; do lipo build/Release/tag -verify_arch "$arch"; done
 
 Testing
 ---
