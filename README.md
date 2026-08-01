@@ -1,6 +1,6 @@
 tag
 ===
-**tag** is a command line tool to manipulate tags on Mac OS X files (10.9 Mavericks and above), and to query for files with those tags. **tag** can use the file system's built-in metadata search functionality to rapidly find all files that have been tagged with a given set of tags.
+**tag** is a command line tool to manipulate tags on macOS 15 and later, and to query for files with those tags. **tag** can use the file system's built-in metadata search functionality to rapidly find all files that have been tagged with a given set of tags.
 
 Usage
 ---
@@ -178,7 +178,9 @@ As with the *find* operation, you may control the paths searched by *usage*:
 	
 ### Colored Output
 
-If your terminal supports ANSI color sequences, you may pass the -c/--color option. With this option in effect, any tags with known colors will be displayed in approximately the right color. Note that support for this option is dependent upon parsing private Finder data, and so may not always be supported correctly.
+If your terminal supports ANSI color sequences, you may pass the -c/--color option. With this option in effect, any tags with known colors will be displayed in approximately the right color.
+
+Standard Finder color names such as Red, Orange, Yellow, Green, Blue, Purple, and Gray are supported directly. For user-customized tag colors, **tag** uses Finder preference data as a best-effort integration because macOS exposes public APIs for tag names, but not a stable public API for Finder's tag color mapping. Color lookup failures do not affect tag operations or non-color output.
 
 ### Get help
 
@@ -200,13 +202,52 @@ You may install **tag** using the following package managers:
 
 Building and Installing
 ---
-You must have Xcode or the Command Line Tools installed to build/install.
+You must have macOS 15 or later and Xcode or the Command Line Tools installed to build/install.
 
 To build without installing:
 
 	make
 
-This will build **tag** into ./bin/tag
+This uses `xcrun swiftc`, targets macOS 15.0, and builds a Universal 2 **tag** binary into ./bin/tag.
+
+To verify the binary contains both Apple Silicon and Intel slices:
+
+	make check-universal
+
+To build only for the current machine architecture during local development:
+
+	make native
+
+You can also verify the Xcode target directly (`lipo -verify_arch` accepts one architecture per invocation):
+
+	xcodebuild -project Tag.xcodeproj -target Tag -configuration Debug build
+	for arch in arm64 x86_64; do lipo build/Debug/tag -verify_arch "$arch"; done
+	xcodebuild -project Tag.xcodeproj -target Tag -configuration Release build
+	for arch in arm64 x86_64; do lipo build/Release/tag -verify_arch "$arch"; done
+
+Testing
+---
+
+The Makefile owns the canonical test suite for local development and CI:
+
+	make test
+
+This builds the CLI, runs SwiftLint when available, runs subprocess integration tests, verifies Universal 2 output, checks staged installation, builds Xcode Debug and Release outputs, and lints the man page when `mandoc` is available.
+
+To run SwiftLint locally, install dependencies from the repo `Brewfile` and use:
+
+	brew bundle
+	make lint-swift
+
+For a faster CLI-only pass:
+
+	make test-cli
+
+To test a different binary, set `TAG_BIN`:
+
+	TAG_BIN=/path/to/tag Tests/integration.sh
+
+See `Documentation/phase-1-baseline.md` for the captured behavior baseline, `Documentation/phase-2-build-modernization.md` for current build modernization details, `Documentation/phase-2a-universal-2.md` for Universal 2 build notes, `Documentation/phase-3-api-implementation.md` for current API and error-handling notes, `Documentation/phase-4-finder-colors.md` for Finder color behavior, `Documentation/phase-5-swift-rewrite.md` for Swift rewrite notes, `Documentation/test-suite.md` for test coverage, and `Documentation/release-checklist.md` for release steps.
 
 To build and install onto your system:
 

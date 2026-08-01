@@ -8,11 +8,9 @@
 
 /* Begin PBXBuildFile section */
 		901F140E181B16A00007C852 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 901F140D181B16A00007C852 /* Foundation.framework */; };
-		901F1411181B16A00007C852 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 901F1410181B16A00007C852 /* main.m */; };
 		901F1415181B16A00007C852 /* tag.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = 901F1414181B16A00007C852 /* tag.1 */; };
-		901F141D181B25F10007C852 /* Tag.m in Sources */ = {isa = PBXBuildFile; fileRef = 901F141C181B25F10007C852 /* Tag.m */; };
 		901F141F181B469E0007C852 /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 901F141E181B469E0007C852 /* CoreServices.framework */; };
-		90A6AB6E1823FE7B002AE709 /* TagName.m in Sources */ = {isa = PBXBuildFile; fileRef = 90A6AB6D1823FE7B002AE709 /* TagName.m */; };
+		90B0000118ABCDEF002AE709 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90B0000018ABCDEF002AE709 /* main.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -31,17 +29,12 @@
 /* Begin PBXFileReference section */
 		901F140A181B16A00007C852 /* tag */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = tag; sourceTree = BUILT_PRODUCTS_DIR; };
 		901F140D181B16A00007C852 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
-		901F1410181B16A00007C852 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
-		901F1413181B16A00007C852 /* Tag-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Tag-Prefix.pch"; sourceTree = "<group>"; };
+		90B0000018ABCDEF002AE709 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		901F1414181B16A00007C852 /* tag.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = tag.1; sourceTree = "<group>"; };
-		901F141B181B25F10007C852 /* Tag.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Tag.h; sourceTree = "<group>"; };
-		901F141C181B25F10007C852 /* Tag.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Tag.m; sourceTree = "<group>"; };
 		901F141E181B469E0007C852 /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = System/Library/Frameworks/CoreServices.framework; sourceTree = SDKROOT; };
 		901F1423181B71AF0007C852 /* Makefile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
 		901F1425181B90930007C852 /* LICENSE */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = LICENSE; sourceTree = "<group>"; };
 		901F1426181B90930007C852 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = README.md; sourceTree = "<group>"; };
-		90A6AB6C1823FE7B002AE709 /* TagName.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TagName.h; sourceTree = "<group>"; };
-		90A6AB6D1823FE7B002AE709 /* TagName.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TagName.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -89,23 +82,10 @@
 		901F140F181B16A00007C852 /* Tag */ = {
 			isa = PBXGroup;
 			children = (
-				901F1410181B16A00007C852 /* main.m */,
+				90B0000018ABCDEF002AE709 /* main.swift */,
 				901F1414181B16A00007C852 /* tag.1 */,
-				901F141B181B25F10007C852 /* Tag.h */,
-				901F141C181B25F10007C852 /* Tag.m */,
-				90A6AB6C1823FE7B002AE709 /* TagName.h */,
-				90A6AB6D1823FE7B002AE709 /* TagName.m */,
-				901F1412181B16A00007C852 /* Supporting Files */,
 			);
 			path = Tag;
-			sourceTree = "<group>";
-		};
-		901F1412181B16A00007C852 /* Supporting Files */ = {
-			isa = PBXGroup;
-			children = (
-				901F1413181B16A00007C852 /* Tag-Prefix.pch */,
-			);
-			name = "Supporting Files";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -134,11 +114,12 @@
 		901F1402181B16A00007C852 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 1020;
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1600;
 				ORGANIZATIONNAME = "Culinate, Inc.";
 			};
 			buildConfigurationList = 901F1405181B16A00007C852 /* Build configuration list for PBXProject "Tag" */;
-			compatibilityVersion = "Xcode 3.2";
+			compatibilityVersion = "Xcode 14.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -160,9 +141,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				90A6AB6E1823FE7B002AE709 /* TagName.m in Sources */,
-				901F141D181B25F10007C852 /* Tag.m in Sources */,
-				901F1411181B16A00007C852 /* main.m in Sources */,
+				90B0000118ABCDEF002AE709 /* main.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -214,9 +193,10 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.9;
-				ONLY_ACTIVE_ARCH = YES;
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				ONLY_ACTIVE_ARCH = NO;
 				SDKROOT = macosx;
+				SWIFT_VERSION = 6.0;
 			};
 			name = Debug;
 		};
@@ -259,16 +239,16 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.9;
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				SDKROOT = macosx;
+				SWIFT_VERSION = 6.0;
 			};
 			name = Release;
 		};
 		901F1419181B16A00007C852 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = "Tag/Tag-Prefix.pch";
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				PRODUCT_NAME = tag;
 			};
 			name = Debug;
@@ -276,8 +256,7 @@
 		901F141A181B16A00007C852 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = "Tag/Tag-Prefix.pch";
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				PRODUCT_NAME = tag;
 			};
 			name = Release;

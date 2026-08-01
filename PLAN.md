@@ -1,0 +1,167 @@
+# Modernization Plan
+
+This project is a small macOS command-line tool for reading, writing, matching, and searching Finder tags. It began as an Objective-C Foundation/CoreServices tool with build assumptions from the macOS 10.9 era and now targets macOS 15 and later with Swift internals.
+
+## Goals
+
+- Keep the existing `tag` command behavior stable unless a change is explicitly called out below.
+- Move the build and packaging story to current macOS and Xcode expectations.
+- Replace brittle or private implementation details where macOS 15 offers a supported path.
+- Add enough automated coverage to make future refactors safe.
+- Preserve terminal-friendly behavior, including `--nul`, recursive enumeration, and scriptable output.
+
+## Initial State
+
+- At plan creation, the Xcode project used an old compatibility level (`Xcode 3.2`) and a macOS 10.9 deployment target.
+- At plan creation, the Makefile built with a direct compiler invocation and did not clearly mirror Xcode's ARC or deployment target settings.
+- The app uses public `NSURLTagNamesKey` APIs for reading and writing tags, which should remain the baseline implementation.
+- `--find` and `--usage` use `NSMetadataQuery` and Spotlight metadata attributes.
+- `--color` reads Finder's synced preferences directly, which is private, fragile, and called out in the README as best-effort behavior.
+- At plan creation, there was no visible automated test suite, CI workflow, formatting rule, or release checklist.
+
+## Phase 1: Establish a Safe Baseline
+
+- [x] Build the current project with the latest available Xcode command-line tools.
+- [x] Record current behavior with a small manual fixture:
+  - [x] Files with no tags.
+  - [x] Files with one tag.
+  - [x] Files with multiple tags.
+  - [x] Directories with tags.
+  - [x] Hidden files and recursive directory traversal.
+- [x] Capture command behavior for the major modes:
+  - [x] `--list`
+  - [x] `--set`
+  - [x] `--add`
+  - [x] `--remove`
+  - [x] `--match`
+  - [x] `--find`
+  - [x] `--usage`
+- [x] Decide which legacy behaviors are contractual:
+  - [x] Case-insensitive tag matching.
+  - [x] Comma-separated tag parsing without comma escaping.
+  - [x] `-d`/`--descend` as an alias for `--recursive`.
+  - [x] Defaulting to `--list` when no operation is provided.
+- [x] Add a lightweight test harness before broad rewrites. Prefer integration tests that run the built `tag` binary against temporary files because the public surface is the CLI.
+
+## Phase 2: Modernize Build Infrastructure
+
+- [x] Update the Xcode project:
+  - [x] Set `MACOSX_DEPLOYMENT_TARGET = 15.0`.
+  - [x] Run Xcode's project modernization so `LastUpgradeCheck`, project compatibility, warnings, and recommended settings are current.
+  - [x] Remove the prefix header unless a current build setting still requires it.
+  - [x] Make build settings explicit at the target level where it improves reproducibility.
+- [x] Update the Makefile or replace it with a clearer primary build path:
+  - [x] Ensure compiler and deployment settings are explicit when building outside Xcode.
+  - [x] Pass the macOS 15 deployment target explicitly.
+  - [x] Use `xcrun` or `xcodebuild` consistently instead of relying on whichever compiler appears first.
+  - [x] Keep `DESTDIR`, `prefix`, man page installation, and uninstall support for package managers.
+- [x] Consider adding a Swift Package Manager manifest only if it improves CLI development and packaging without disrupting Homebrew/MacPorts workflows.
+- [x] Add CI:
+  - [x] Build in Debug and Release.
+  - [x] Run CLI integration tests.
+  - [x] Run on the newest available macOS runner.
+
+## Phase 2A: Produce Universal 2 Binaries
+
+- [x] Decide whether Universal 2 should be required for every local `make` build or only for release/distribution builds.
+- [x] Update the Makefile so the documented distribution build produces one Universal 2 binary with both `arm64` and `x86_64` slices.
+- [x] Keep a simple way to build a single-architecture binary for local development if needed.
+- [x] Verify the Xcode build also produces a Universal 2 binary, not separate Intel and Apple Silicon outputs.
+- [x] Add a CI check that inspects the built executable with `lipo -info` or `file` and fails unless both `arm64` and `x86_64` are present.
+- [x] Document the Universal 2 build command and verification command in the README.
+- [x] Ensure `make install DESTDIR=...` installs the Universal 2 binary for packaging workflows.
+
+## Phase 3: API and Implementation Updates
+
+- [x] Keep `NSURLTagNamesKey` for file tag reads and writes unless testing shows a macOS 15 regression.
+- [x] Audit all file URL handling:
+  - [x] Prefer standardized file URLs where user-visible output remains unchanged.
+  - [x] Preserve relative path output for existing commands.
+  - [x] Handle symlinks, inaccessible paths, and deleted files consistently.
+- [x] Revisit `NSMetadataQuery` usage:
+  - [x] Verify `kMDItemUserTags`, `kMDItemPath`, and search scopes still behave as expected on macOS 15.
+  - [x] Add timeouts or clearer error reporting if Spotlight metadata is unavailable, disabled, or still indexing.
+  - [x] Document why `--find` and `--usage` are not deterministic enough for temporary-fixture CI tests.
+- [x] Replace process-wide `exit()` calls in implementation methods with error returns at the core logic layer. Keep the CLI exit codes compatible at `main`.
+- [x] Split command-line parsing, tag operations, output formatting, and metadata search into smaller units after tests exist.
+- [x] Review string handling:
+  - [x] Validate invalid UTF-8 paths or arguments.
+  - [x] Decide whether comma escaping should remain unsupported or become a new feature.
+  - [x] Use localized/case-insensitive comparison only where it matches Finder behavior.
+- [x] Review output:
+  - [x] Preserve `--nul` exactly for scripting.
+  - [x] Avoid ANSI color unless stdout is a terminal.
+  - [x] Keep stderr diagnostics actionable and include the path when an operation fails.
+
+## Phase 4: Preserve and Harden Finder Tag Color Support
+
+- [x] Treat Finder tag color output as a core feature to preserve, not a feature to remove.
+- [x] Keep `--color` and continue matching the standard Finder tag colors when that information is available.
+- [x] Investigate whether macOS 15 exposes a supported API for Finder tag color metadata.
+- [x] If no supported API exists, isolate the current Finder preference parsing behind a small color-provider boundary because it depends on private data shape.
+- [x] Document the boundary clearly: file tag names use public APIs, while exact Finder color lookup is best-effort Finder preference integration.
+- [x] Add tests that tolerate missing, unreadable, or structurally changed Finder color preferences.
+- [x] Do not let color lookup failures affect tag operations or non-color output.
+- [x] Consider adding a user-configurable color map only as a fallback or override, not as a replacement for Finder colors.
+- [x] Keep ANSI color output gated to terminal output so scripted output remains stable.
+
+## Phase 5: Rewrite CLI Internals in Swift
+
+- [x] Treat Swift as the preferred modernization path now that the project targets macOS 15+, has integration tests, and has clearer build/behavior baselines.
+- [x] Preserve the public CLI contract throughout the rewrite:
+  - [x] Keep the `tag` binary name.
+  - [x] Keep existing command syntax and short/long options.
+  - [x] Keep existing exit-code meanings.
+  - [x] Keep relative path output, `--nul`, and color-output behavior stable.
+  - [x] Keep the man page and package-manager install paths stable.
+- [x] Use the Objective-C implementation as the behavior reference until the Swift implementation reaches parity.
+- [x] Keep the rewrite internal first; do not combine it with feature redesigns or breaking command-line changes.
+- [x] Organize the Swift implementation around small focused types:
+  - [x] `TagCLI`
+  - [x] `TagName`
+  - [x] `FinderTagColorProvider`
+  - [x] `MetadataQueryObserver`
+  - [x] URL and output helpers
+- [x] Continue using supported Foundation APIs where possible:
+  - [x] `URLResourceKey.tagNamesKey` for reading and writing tags.
+  - [x] `NSMetadataQuery` for Spotlight-backed `--find` and `--usage`.
+  - [x] `FileManager` and `URL` for file traversal.
+  - [x] `ProcessInfo` for process context.
+- [x] Be cautious with third-party argument parsing:
+  - [x] Preserve legacy details such as optional `--usage` tags, default `--list`, and `-d`/`--descend`.
+  - [x] Prefer a small custom parser initially if `swift-argument-parser` cannot preserve compatibility exactly.
+- [x] Keep the Objective-C files until the Swift binary passes the existing integration suite and any added parity tests.
+- [x] Remove the Objective-C implementation only after Swift parity is verified in Makefile builds, Xcode builds, Universal 2 checks, and CI.
+
+## Phase 6: Documentation and Distribution
+
+- [x] Update README references from the old macOS 10.9 support statement to "macOS 15 and later".
+- [x] Regenerate the man page from a single source of truth or document the manual update process.
+- [x] Fix documentation drift:
+  - [x] The README uses `--nul`; the man page previously documented the wrong long option.
+  - [x] The man page contains a typo in the `--network` option line.
+- [x] Add a release checklist:
+  - [x] Version bump.
+  - [x] README update.
+  - [x] Man page update.
+  - [x] Build and test commands.
+  - [x] Homebrew/MacPorts packaging notes.
+
+## Suggested Milestones
+
+- [ ] Baseline branch: build current code, add CLI integration tests, and document current behavior.
+- [ ] Build modernization branch: update deployment target, project settings, Makefile, and CI.
+- [ ] Universal 2 distribution branch: produce and verify a single binary containing both Apple Silicon and Intel slices.
+- [ ] Internal cleanup branch: separate parsing, operations, output, and metadata search with no intended behavior change.
+- [ ] macOS 15 behavior branch: address Spotlight query behavior, error handling, and tag color policy.
+- [x] Documentation branch: update README, man page, install instructions, and release checklist.
+
+## Acceptance Criteria
+
+- [x] `tag` builds from a clean checkout on macOS 15+ using the documented command.
+- [x] The documented distribution build produces a Universal 2 `tag` binary with `arm64` and `x86_64` slices.
+- [x] Automated tests cover the main CLI modes and pass in CI.
+- [x] `make install DESTDIR=...` or the chosen replacement works for packaging.
+- [x] Existing documented command syntax continues to work unless a breaking change is explicitly approved.
+- [x] Private Finder preference parsing is either removed, isolated behind a documented best-effort boundary, or replaced with a supported/configurable approach.
+- [x] README and man page agree on supported macOS versions, options, and installation paths.
