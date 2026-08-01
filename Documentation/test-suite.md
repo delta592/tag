@@ -21,10 +21,10 @@ CI runs the same `make test` target so local and automated validation do not dri
 - `make test-xcode`: Builds Xcode Debug and Release outputs and verifies Universal 2 slices.
 - `make test-man`: Runs `mandoc -T lint Tag/tag.1` when `mandoc` is available.
 
-CI installs SwiftLint before running `make test`, so linting is enforced in GitHub Actions. Local runs skip SwiftLint with a message if it is not installed. Install it with:
+CI installs SwiftLint from the repo `Brewfile` before running `make test`, so linting is enforced in GitHub Actions. Local runs skip SwiftLint with a message if it is not installed. Install it with:
 
 ```sh
-brew install swiftlint
+brew bundle
 ```
 
 ## CLI Integration Coverage

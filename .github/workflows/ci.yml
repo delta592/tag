@@ -13,8 +13,8 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Install SwiftLint
-        run: brew install swiftlint
+      - name: Install dependencies
+        run: brew bundle --no-upgrade
 
       - name: Run canonical test suite
         run: make test

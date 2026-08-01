@@ -234,8 +234,9 @@ The Makefile owns the canonical test suite for local development and CI:
 
 This builds the CLI, runs SwiftLint when available, runs subprocess integration tests, verifies Universal 2 output, checks staged installation, builds Xcode Debug and Release outputs, and lints the man page when `mandoc` is available.
 
-To run SwiftLint locally, install it and use:
+To run SwiftLint locally, install dependencies from the repo `Brewfile` and use:
 
+	brew bundle
 	make lint-swift
 
 For a faster CLI-only pass:

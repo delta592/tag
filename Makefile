@@ -83,7 +83,7 @@ lint-swift:
 	@if command -v swiftlint >/dev/null 2>&1; then \
 		swiftlint lint --config .swiftlint.yml; \
 	else \
-		echo "swiftlint not found; skipping SwiftLint (install with 'brew install swiftlint')"; \
+		echo "swiftlint not found; skipping SwiftLint (install with 'brew bundle')"; \
 	fi
 
 test-cli: tag
