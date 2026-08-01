@@ -6,7 +6,7 @@
   "enabledManagers": [
     "github-actions",
     "homebrew",
-    "regex",
+    "custom.regex",
     "swift"
   ],
   "packageRules": [
